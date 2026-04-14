@@ -11,14 +11,12 @@ Thumbs.db
 # Ignorar dependencias (se instalan con 'npm install')
 /backend/node_modules/
 /api-core/node_modules/
-/api-core/.env
 
 
 /backend/.env
 /ui-web/node_modules/
 /ui-web/.env
 
-/api-core/package-lock.json
 
 # Ignorar logs de npm
 npm-debug.log*
