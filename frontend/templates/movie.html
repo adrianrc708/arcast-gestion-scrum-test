@@ -8,45 +8,68 @@
         .review .rating { color: #f0ad4e; }
         form { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
         input, select, textarea { width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; }
+
+        /* Estilos para el detalle de la película */
+        .movie-detail-layout {
+            display: flex;
+            gap: 20px;
+        }
+        .movie-poster img {
+            width: 250px;
+            border-radius: 5px;
+        }
+        .movie-info {
+            flex: 1;
+        }
     </style>
 
     <a href="{{ url_for('index') }}">&larr; Volver a la lista</a>
-    <h1>{{ movie.title }}</h1>
 
-    <h2>Agregar tu Reseña</h2>
-    <form action="{{ url_for('add_review', movie_id=movie_id) }}" method="POST">
-        
-        <input type="hidden" name="movieTitle" value="{{ movie.title }}">
+    <div class="movie-detail-layout" style="margin-top: 20px;">
+        <div class="movie-poster">
+            <img src="{{ movie.posterUrl or 'https://i.imgur.com/gA3S3jY.png' }}" alt="{{ movie.title }}">
+        </div>
 
-        {% if not session.get('username') %}
-            <label for="username">Usuario:</label>
-            <input type="text" id="username" name="username" required placeholder="Tu nombre (Anónimo)">
+        <div class="movie-info">
+            <h1>{{ movie.title }}</h1>
+            <p><strong>Fecha de Estreno:</strong> {{ movie.releaseDate or 'No disponible' }}</p>
+            <h3>Sinopsis</h3>
+            <p>{{ movie.overview or 'No hay descripción disponible.' }}</p>
+        </div>
+    </div>
+
+    <div class="review-section">
+        <h2>Agregar tu Reseña</h2>
+        <form action="{{ url_for('add_review', movie_id=movie_id) }}" method="POST">
+            <input type="hidden" name="movieTitle" value="{{ movie.title }}">
+            {% if not session.get('username') %}
+                <label for="username">Usuario:</label>
+                <input type="text" id="username" name="username" required placeholder="Tu nombre (Anónimo)">
+            {% endif %}
+            <label for="rating">Calificación:</label>
+            <select id="rating" name="rating" required>
+                <option value="5">5 Estrellas</option>
+                <option value="4">4 Estrellas</option>
+                <option value="3">3 Estrellas</option>
+                <option value="2">2 Estrellas</option>
+                <option value="1">1 Estrella</option>
+            </select>
+            <label for="text">Reseña:</label>
+            <textarea id="text" name="text" rows="4" required></textarea>
+            <button type="submit">Enviar</button>
+        </form>
+
+        <h2>Reseñas de Usuarios</h2>
+        {% if reviews %}
+            {% for review in reviews %}
+                <div class="review">
+                    <h4>{{ review.username }} <span class="rating">({{ review.rating }}/5)</span></h4>
+                    <p>{{ review.text }}</p>
+                    <small>Fecha: {{ review.date.split('T')[0] }}</small>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No hay reseñas para esta película. ¡Sé el primero!</p>
         {% endif %}
-        <label for="rating">Calificación:</label>
-        <select id="rating" name="rating" required>
-            <option value="5">5 Estrellas</option>
-            <option value="4">4 Estrellas</option>
-            <option value="3">3 Estrellas</option>
-            <option value="2">2 Estrellas</option>
-            <option value="1">1 Estrella</option>
-        </select>
-        
-        <label for="text">Reseña:</label>
-        <textarea id="text" name="text" rows="4" required></textarea>
-        
-        <button type="submit">Enviar</button>
-    </form>
-
-    <h2>Reseñas de Usuarios</h2>
-    {% if reviews %}
-        {% for review in reviews %}
-            <div class="review">
-                <h4>{{ review.username }} <span class="rating">({{ review.rating }}/5)</span></h4>
-                <p>{{ review.text }}</p>
-                <small>Fecha: {{ review.date.split('T')[0] }}</small>
-            </div>
-        {% endfor %}
-    {% else %}
-        <p>No hay reseñas para esta película. ¡Sé el primero!</p>
-    {% endif %}
+    </div>
 {% endblock %}
