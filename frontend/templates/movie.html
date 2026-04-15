@@ -1,29 +1,27 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ movie.title }}</title>
+{% extends "base.html" %}
+{% block title %}{{ movie.title }}{% endblock %}
+
+{% block content %}
     <style>
-        body { font-family: sans-serif; margin: 2em; max-width: 800px; }
         .review { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
         .review h4 { margin: 0 0 5px 0; }
         .review .rating { color: #f0ad4e; }
         form { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
         input, select, textarea { width: 100%; padding: 8px; margin-bottom: 10px; box-sizing: border-box; }
     </style>
-</head>
-<body>
+
     <a href="{{ url_for('index') }}">&larr; Volver a la lista</a>
     <h1>{{ movie.title }}</h1>
 
     <h2>Agregar tu Reseña</h2>
     <form action="{{ url_for('add_review', movie_id=movie_id) }}" method="POST">
-
+        
         <input type="hidden" name="movieTitle" value="{{ movie.title }}">
 
-        <label for="username">Usuario:</label>
-        <input type="text" id="username" name="username" required>
-
+        {% if not session.get('username') %}
+            <label for="username">Usuario:</label>
+            <input type="text" id="username" name="username" required placeholder="Tu nombre (Anónimo)">
+        {% endif %}
         <label for="rating">Calificación:</label>
         <select id="rating" name="rating" required>
             <option value="5">5 Estrellas</option>
@@ -32,10 +30,10 @@
             <option value="2">2 Estrellas</option>
             <option value="1">1 Estrella</option>
         </select>
-
+        
         <label for="text">Reseña:</label>
         <textarea id="text" name="text" rows="4" required></textarea>
-
+        
         <button type="submit">Enviar</button>
     </form>
 
@@ -51,6 +49,4 @@
     {% else %}
         <p>No hay reseñas para esta película. ¡Sé el primero!</p>
     {% endif %}
-
-</body>
-</html>
+{% endblock %}

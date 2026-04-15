@@ -5,15 +5,21 @@ require('dotenv').config();
 
 const app = express();
 
-// Conectar a MongoDB 
+// Conectar a MongoDB
 connectDB();
 
 // Middlewares
-app.use(cors()); // Permite comunicación entre frontend y backend
-app.use(express.json()); // Para parsear JSON
+app.use(cors());
+app.use(express.json());
 
 // Rutas de la API
 app.use('/api/reviews', require('./routes/reviews.routes'));
 app.use('/api/movies', require('./routes/movies.routes'));
+
+// --- NUEVAS RUTAS ---
+app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/user', require('./routes/user.routes'));
+// --- FIN NUEVAS RUTAS ---
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Backend (Node.js) corriendo en puerto ${PORT}`));
