@@ -15,8 +15,11 @@ app.use(express.json());
 // Rutas de la API
 app.use('/api/reviews', require('./routes/reviews.routes'));
 app.use('/api/movies', require('./routes/movies.routes'));
+app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/user', require('./routes/user.routes'));
 
 // --- NUEVAS RUTAS ---
+app.use('/api/import', require('./routes/import.routes'));
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/user', require('./routes/user.routes'));
 // --- FIN NUEVAS RUTAS ---
