@@ -3,76 +3,106 @@
 
 {% block content %}
     <style>
-        .form-new {
-            background: #f4f4f4; padding: 15px; border-radius: 5px;
-            display: flex; gap: 20px;
-        }
-        .form-new form { flex: 1; }
+        /* Estilos de Tarjetas (Estilo Rotten Tomatoes/Fandango) */
+        .section-title { font-size: 1.5em; margin-bottom: 15px; border-left: 5px solid #fa320a; padding-left: 10px; }
+
         .movie-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 20px;
-            margin-top: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* Tarjetas responsivas */
+            gap: 25px;
+            margin-bottom: 40px;
         }
+
         .movie-card {
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            text-decoration: none;
-            color: black;
-            overflow: hidden; /* Para que la imagen no se salga */
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: transform 0.2s;
+            /* Sombra suave */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .movie-card img {
-            width: 100%;
-            height: auto;
-            display: block;
+        .movie-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        .movie-poster-container { position: relative; width: 100%; padding-top: 150%; /* Aspect ratio 2:3 */ }
+        .movie-poster-container img {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
         }
-        .movie-card-title {
-            padding: 10px;
-            font-weight: bold;
-            font-size: 0.9em;
+
+        .card-content { padding: 10px; }
+
+        .score-badge {
+            display: flex; align-items: center; gap: 5px; font-size: 0.9em; margin-bottom: 5px; font-weight: bold;
         }
+        .score-icon { width: 16px; height: 16px; } /* Puedes poner iconos png aquí */
+
+        .movie-title {
+            font-size: 1em; font-weight: bold; margin-bottom: 10px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            display: block; text-decoration: none; color: #333;
+        }
+        .movie-title:hover { color: #fa320a; }
+
         .watchlist-btn {
-            background: #6c757d; color: white; border: none;
-            padding: 5px 10px; cursor: pointer; border-radius: 3px;
-            font-size: 0.8em; width: 100%;
+            width: 100%;
+            padding: 8px 0;
+            background-color: white;
+            border: 1px solid #333;
+            border-radius: 20px; /* Bordes redondos tipo píldora */
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8em;
+            display: flex; justify-content: center; align-items: center; gap: 5px;
+            transition: background 0.2s;
         }
+        .watchlist-btn:hover { background-color: #f0f0f0; }
+
+        /* Formularios de Importación (Estilo sutil) */
+        .import-bar { background: #eee; padding: 15px; border-radius: 8px; margin-bottom: 30px; display: flex; gap: 15px; }
+        .import-bar form { flex: 1; display: flex; gap: 10px; }
+        .import-bar input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .import-bar button { padding: 8px 15px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; }
+
     </style>
 
-    <h1>ReelScore</h1>
-
-    <div class="form-new">
+    <div class="import-bar">
         <form action="{{ url_for('import_movie') }}" method="POST">
-            <h3>Importar Película</h3>
-            <label for="title">Título de la Película:</label>
-            <input type="text" id="title" name="title" required style="width: 100%; box-sizing: border-box;">
-            <button type="submit" style="margin-top: 5px;">Importar</button>
+            <input type="text" name="title" placeholder="Importar película (ej. Gladiator)" required>
+            <button type="submit">Importar</button>
         </form>
-
         <form action="{{ url_for('import_tv') }}" method="POST">
-            <h3>Importar Serie de TV</h3>
-            <label for="name">Nombre de la Serie:</label>
-            <input type="text" id="name" name="name" required style="width: 100%; box-sizing: border-box;">
-            <button type="submit" style="margin-top: 5px;">Importar</button>
+            <input type="text" name="name" placeholder="Importar serie (ej. Breaking Bad)" required>
+            <button type="submit">Importar</button>
         </form>
     </div>
 
-    <h2>Películas Disponibles</h2>
+    <h2 class="section-title">Movies in Theaters & At Home</h2>
     <div class="movie-grid">
         {% for movie in movies %}
             <div class="movie-card">
-                <a href="{{ url_for('movie_detail', movie_id=movie._id) }}">
+                <a href="{{ url_for('movie_detail', movie_id=movie._id) }}" class="movie-poster-container">
                     <img src="{{ movie.posterUrl or 'https://i.imgur.com/gA3S3jY.png' }}" alt="{{ movie.title }}">
-                    <div class="movie-card-title">{{ movie.title }}</div>
                 </a>
-                <form action="{{ url_for('add_to_watchlist') }}" method="POST" style="padding: 0 10px 10px 10px;">
-                    <input type="hidden" name="movieId" value="{{ movie._id }}">
-                    <button type="submit" class="watchlist-btn">+ Watchlist</button>
-                </form>
+
+                <div class="card-content">
+                    <div class="score-badge">
+                        <span style="color: tomato;">🍅</span>
+                        {{ (movie.voteAverage * 10)|round|int }}%
+                    </div>
+
+                    <a href="{{ url_for('movie_detail', movie_id=movie._id) }}" class="movie-title" title="{{ movie.title }}">
+                        {{ movie.title }}
+                    </a>
+
+                    <form action="{{ url_for('add_to_watchlist') }}" method="POST">
+                        <input type="hidden" name="movieId" value="{{ movie._id }}">
+                        <button type="submit" class="watchlist-btn">
+                            <span>+</span> WATCHLIST
+                        </button>
+                    </form>
+                </div>
             </div>
         {% else %}
-            <p>No hay películas en la base de datos. ¡Importa una!</p>
+            <p>No hay películas. ¡Usa el importador arriba!</p>
         {% endfor %}
     </div>
-
-    {% endblock %}
+{% endblock %}
