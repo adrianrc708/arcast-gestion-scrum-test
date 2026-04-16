@@ -4,91 +4,117 @@ const TVShow = require('../models/tvshow.model');
 
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
-const TMDB_IMG_URL = 'https://image.tmdb.org/t/p/w500'; // URL base para imágenes
+const TMDB_IMG_URL = 'https://image.tmdb.org/t/p/w500';
 
-// Importar una PELÍCULA
+// Función auxiliar para encontrar el trailer de YouTube
+const findTrailer = (videos) => {
+    if (!videos || !videos.results) return null;
+    // Buscamos un video que sea "Trailer" y esté en "YouTube"
+    const trailer = videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+    return trailer ? trailer.key : null; // Retornamos solo la clave (ej: d96cjJhvlMA)
+};
+
+// Importar PELÍCULA
 exports.importMovie = async (req, res) => {
     const { title } = req.body;
-    if (!title) {
-        return res.status(400).json({ message: 'Se requiere un título' });
-    }
+    if (!title) return res.status(400).json({ message: 'Se requiere un título' });
 
     try {
-        // 1. Buscar la película en TMDB
-        const searchResponse = await axios.get(`${TMDB_BASE_URL}/search/movie`, {
+        // 1. Buscar ID
+        const searchRes = await axios.get(`${TMDB_BASE_URL}/search/movie`, {
             params: { api_key: TMDB_API_KEY, query: title, language: 'es-ES' }
         });
 
-        if (searchResponse.data.results.length === 0) {
-            return res.status(404).json({ message: 'No se encontraron películas con ese título.' });
+        if (searchRes.data.results.length === 0) {
+            return res.status(404).json({ message: 'No encontrada.' });
         }
 
-        // 2. Tomar el primer resultado (el más relevante)
-        const tmdbMovie = searchResponse.data.results[0];
+        const firstResult = searchRes.data.results[0];
 
-        // 3. Verificar si ya existe en nuestra DB por tmdbId
-        let movie = await Movie.findOne({ tmdbId: tmdbMovie.id });
-        if (movie) {
-            return res.status(400).json({ message: 'Esa película ya fue importada.' });
-        }
+        // 2. Obtener DETALLES COMPLETOS (Géneros + Videos)
+        const detailRes = await axios.get(`${TMDB_BASE_URL}/movie/${firstResult.id}`, {
+            params: {
+                api_key: TMDB_API_KEY,
+                language: 'es-ES',
+                append_to_response: 'videos' // <-- Truco para pedir videos
+            }
+        });
 
-        // 4. Crear y guardar la nueva película en nuestra DB
+        const movieData = detailRes.data;
+
+        // 3. Verificar existencia
+        let movie = await Movie.findOne({ tmdbId: movieData.id });
+        if (movie) return res.status(400).json({ message: 'Ya existe.' });
+
+        // 4. Guardar
         movie = new Movie({
-            title: tmdbMovie.title,
-            overview: tmdbMovie.overview,
-            posterUrl: tmdbMovie.poster_path ? `${TMDB_IMG_URL}${tmdbMovie.poster_path}` : null,
-            tmdbId: tmdbMovie.id,
-            releaseDate: tmdbMovie.release_date
+            title: movieData.title,
+            overview: movieData.overview,
+            posterUrl: movieData.poster_path ? `${TMDB_IMG_URL}${movieData.poster_path}` : null,
+            tmdbId: movieData.id,
+            releaseDate: movieData.release_date,
+            voteAverage: movieData.vote_average,
+            genres: movieData.genres.map(g => g.name), // Extraer nombres de géneros
+            trailerKey: findTrailer(movieData.videos)   // Extraer trailer
         });
 
         await movie.save();
         res.status(201).json(movie);
 
     } catch (err) {
-        if (err.response) console.error('Error TMDB:', err.response.data);
-        res.status(500).json({ message: 'Error al importar la película.', error: err.message });
+        console.error(err);
+        res.status(500).json({ message: 'Error al importar.' });
     }
 };
 
-// Importar una SERIE DE TV
+// Importar SERIE
 exports.importTVShow = async (req, res) => {
-    const { name } = req.body; // El título de la serie
-    if (!name) {
-        return res.status(400).json({ message: 'Se requiere un nombre' });
-    }
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ message: 'Se requiere un nombre' });
 
     try {
-        // 1. Buscar la serie en TMDB
-        const searchResponse = await axios.get(`${TMDB_BASE_URL}/search/tv`, {
+        // 1. Buscar ID
+        const searchRes = await axios.get(`${TMDB_BASE_URL}/search/tv`, {
             params: { api_key: TMDB_API_KEY, query: name, language: 'es-ES' }
         });
 
-        if (searchResponse.data.results.length === 0) {
-            return res.status(404).json({ message: 'No se encontraron series con ese nombre.' });
+        if (searchRes.data.results.length === 0) {
+            return res.status(404).json({ message: 'No encontrada.' });
         }
 
-        // 2. Tomar el primer resultado
-        const tmdbShow = searchResponse.data.results[0];
+        const firstResult = searchRes.data.results[0];
 
-        // 3. Verificar si ya existe
-        let show = await TVShow.findOne({ tmdbId: tmdbShow.id });
-        if (show) {
-            return res.status(400).json({ message: 'Esa serie ya fue importada.' });
-        }
+        // 2. Detalles completos
+        const detailRes = await axios.get(`${TMDB_BASE_URL}/tv/${firstResult.id}`, {
+            params: {
+                api_key: TMDB_API_KEY,
+                language: 'es-ES',
+                append_to_response: 'videos'
+            }
+        });
+        const tvData = detailRes.data;
 
-        // 4. Crear y guardar
+        // 3. Verificar existencia
+        let show = await TVShow.findOne({ tmdbId: tvData.id });
+        if (show) return res.status(400).json({ message: 'Ya existe.' });
+
+        // 4. Guardar
         show = new TVShow({
-            name: tmdbShow.name,
-            overview: tmdbShow.overview,
-            posterUrl: tmdbShow.poster_path ? `${TMDB_IMG_URL}${tmdbShow.poster_path}` : null,
-            tmdbId: tmdbShow.id,
-            firstAirDate: tmdbShow.first_air_date
+            name: tvData.name,
+            overview: tvData.overview,
+            posterUrl: tvData.poster_path ? `${TMDB_IMG_URL}${tvData.poster_path}` : null,
+            tmdbId: tvData.id,
+            firstAirDate: tvData.first_air_date,
+            voteAverage: tvData.vote_average,
+            genres: tvData.genres.map(g => g.name),
+            trailerKey: findTrailer(tvData.videos)
         });
 
         await show.save();
         res.status(201).json(show);
 
     } catch (err) {
-        res.status(500).json({ message: 'Error al importar la serie.', error: err.message });
+        console.error(err);
+        res.status(500).json({ message: 'Error al importar.' });
     }
 };
