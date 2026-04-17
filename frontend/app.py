@@ -31,46 +31,92 @@ def get_auth_headers():
 
 # --- Rutas de Películas y Reseñas ---
 
+# ... (Imports y configuraciones anteriores siguen igual) ...
+# Asegúrate de mantener todo lo anterior (imports, app config, decorators, etc.)
+
 @app.route('/')
 def index():
-    """Ruta principal: mostrar lista de películas y series"""
-    movies = []
-    tv_shows = []  # <-- NUEVO
-    try:
-        # 1. Obtener Películas
-        response_movies = requests.get(f"{BACKEND_API_URL}/movies")
-        if response_movies.status_code == 200:
-            movies = response_movies.json()
+    """Ruta principal: Panel de control estilo Netflix/Rotten Tomatoes"""
 
-        # 2. Obtener Series (¡NECESITAREMOS ESTO!)
-        # (Nota: Aún no hemos creado el backend para /api/tvshows,
-        # así que por ahora solo buscamos películas)
+    # 1. Listas vacías por defecto
+    movies = []
+    tv_shows = []
+    top_rated = []
+
+    try:
+        # 2. Obtener Películas
+        resp_mov = requests.get(f"{BACKEND_API_URL}/movies")
+        if resp_mov.status_code == 200:
+            movies = resp_mov.json()
+
+        # 3. Obtener Series (Nueva ruta que creamos)
+        resp_tv = requests.get(f"{BACKEND_API_URL}/tvshows")
+        if resp_tv.status_code == 200:
+            tv_shows = resp_tv.json()
+
+        # 4. Filtrar "Aclamadas por la crítica" (Puntuación > 7.5)
+        # Combinamos pelis y series y filtramos
+        all_content = movies + tv_shows
+        # Filtramos los que tengan 'voteAverage' y sea mayor a 7.5
+        top_rated = [item for item in all_content if item.get('voteAverage') and item.get('voteAverage') > 7.5]
+        # Ordenamos de mayor a menor puntaje
+        top_rated.sort(key=lambda x: x['voteAverage'], reverse=True)
 
     except requests.exceptions.ConnectionError:
-        flash("Error: No se pudo conectar al backend (Node.js).", "error")
+        flash("Error: No se pudo conectar al backend.", "error")
 
-    return render_template('index.html', movies=movies, tv_shows=tv_shows)
+    return render_template('index.html', movies=movies, tv_shows=tv_shows, top_rated=top_rated)
 
 
-@app.route('/movie/<movie_id>', methods=['GET'])
-def movie_detail(movie_id):
-    # ... (Esta función no cambia) ...
-    # (El resto del código de esta función es idéntico)
+# ... (El resto de rutas: movie_detail, import, login, etc. SE MANTIENEN IGUAL) ...
+# SOLO TIENES QUE REEMPLAZAR LA FUNCIÓN 'index'
+
+
+# ... (imports y configuraciones anteriores siguen igual) ...
+
+@app.route('/movie/<content_id>', methods=['GET'])
+def movie_detail(content_id):
+    """Detalle de película O serie"""
+    content = None
+
+    # 1. Intentar buscar en la colección de PELÍCULAS
     try:
-        movie_response = requests.get(f"{BACKEND_API_URL}/movies/{movie_id}")
-        if movie_response.status_code != 200:
-            return "Película no encontrada", 404
-        movie = movie_response.json()
+        response = requests.get(f"{BACKEND_API_URL}/movies/{content_id}")
+        if response.status_code == 200:
+            content = response.json()
     except requests.exceptions.ConnectionError:
         return "Error conectando al backend", 500
+
+    # 2. Si no se encontró como película, buscar en SERIES DE TV
+    if not content:
+        try:
+            response = requests.get(f"{BACKEND_API_URL}/tvshows/{content_id}")
+            if response.status_code == 200:
+                content = response.json()
+                # <--- TRUCO: Normalizamos los datos para que la plantilla funcione igual
+                content['title'] = content.get('name')
+                content['releaseDate'] = content.get('firstAirDate')
+        except:
+            pass
+
+    # 3. Si no se encontró en ninguno de los dos
+    if not content:
+        return "Contenido no encontrado (¿Seguro que importaste los datos?)", 404
+
+    # 4. Obtener reseñas (las reseñas funcionan por ID, así que sirve para ambos)
     reviews = []
     try:
-        reviews_response = requests.get(f"{BACKEND_API_URL}/reviews/{movie_id}")
+        reviews_response = requests.get(f"{BACKEND_API_URL}/reviews/{content_id}")
         if reviews_response.status_code == 200:
             reviews = reviews_response.json()
     except requests.exceptions.ConnectionError:
         print("Error: No se pudo conectar al backend por las reseñas.")
-    return render_template('movie.html', movie=movie, movie_id=movie_id, reviews=reviews)
+
+    # Pasamos 'content' como 'movie' para que la plantilla movie.html no se rompa
+    return render_template('movie.html', movie=content, movie_id=content_id, reviews=reviews)
+
+
+# ... (El resto de rutas: add_review, import, etc. siguen igual) ...
 
 
 @app.route('/movie/<movie_id>/add_review', methods=['POST'])

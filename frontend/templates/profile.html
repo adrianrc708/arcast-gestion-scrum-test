@@ -134,7 +134,7 @@
             {% if my_watchlist %}
                 {% for movie in my_watchlist %}
                     <div class="item-list">
-                        <a href="{{ url_for('movie_detail', movie_id=movie._id) }}">
+                        <a href="{{ url_for('movie_detail', content_id=movie._id) }}">
                             {{ movie.title }}
                         </a>
                     </div>
@@ -143,7 +143,7 @@
                 <div class="icon" style="line-height: 55px;">+</div>
                 <p><strong>Your Watchlist is Empty</strong></p>
                 <p>Add movies and shows to your Watchlist to keep track of what you want to watch.</p>
-                {% endif %}
+            {% endif %}
         </div>
     </div>
 </div>
