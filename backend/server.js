@@ -20,6 +20,9 @@ app.use('/api/user', require('./routes/user.routes'));
 
 // --- NUEVAS RUTAS ---
 app.use('/api/import', require('./routes/import.routes'));
+
+// --- NUEVA RUTA ---
+app.use('/api/tvshows', require('./routes/tvshows.routes'));
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/user', require('./routes/user.routes'));
 // --- FIN NUEVAS RUTAS ---

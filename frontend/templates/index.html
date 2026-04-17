@@ -3,93 +3,193 @@
 
 {% block content %}
     <style>
-        /* Estilos de Tarjetas (Estilo Rotten Tomatoes/Fandango) */
-        .section-title { font-size: 1.5em; margin-bottom: 15px; border-left: 5px solid #fa320a; padding-left: 10px; }
-
-        .movie-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); /* Tarjetas responsivas */
-            gap: 25px;
-            margin-bottom: 40px;
+        /* Estilos Generales */
+        h2.category-title {
+            font-size: 1.4em;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            border-left: 5px solid #fa320a; /* Borde rojo estilo marca */
+            padding-left: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .movie-card {
+        /* Contenedor de Scroll Horizontal (El Carrusel) */
+        .media-scroller {
+            display: grid;
+            grid-auto-flow: column; /* Flujo horizontal */
+            grid-auto-columns: 160px; /* Ancho fijo de cada tarjeta */
+            gap: 20px; /* Espacio entre tarjetas */
+            overflow-x: auto; /* Permitir scroll */
+            overscroll-behavior-inline: contain;
+            padding-bottom: 20px; /* Espacio para la barra de scroll */
+            padding-left: 5px;
+        }
+
+        /* Barra de scroll personalizada y sutil */
+        .media-scroller::-webkit-scrollbar { height: 8px; }
+        .media-scroller::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .media-scroller::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+        .media-scroller::-webkit-scrollbar-thumb:hover { background: #fa320a; }
+
+        /* Tarjeta Individual */
+        .media-card {
             background: white;
             border-radius: 8px;
             overflow: hidden;
-            transition: transform 0.2s;
-            /* Sombra suave */
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+            position: relative;
+            border: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
         }
-        .movie-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-
-        .movie-poster-container { position: relative; width: 100%; padding-top: 150%; /* Aspect ratio 2:3 */ }
-        .movie-poster-container img {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;
+        .media-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            z-index: 10;
         }
 
-        .card-content { padding: 10px; }
-
-        .score-badge {
-            display: flex; align-items: center; gap: 5px; font-size: 0.9em; margin-bottom: 5px; font-weight: bold;
-        }
-        .score-icon { width: 16px; height: 16px; } /* Puedes poner iconos png aquí */
-
-        .movie-title {
-            font-size: 1em; font-weight: bold; margin-bottom: 10px;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            display: block; text-decoration: none; color: #333;
-        }
-        .movie-title:hover { color: #fa320a; }
-
-        .watchlist-btn {
+        /* Imagen */
+        .poster-frame {
+            height: 240px; /* Alto fijo para uniformidad */
             width: 100%;
-            padding: 8px 0;
-            background-color: white;
-            border: 1px solid #333;
-            border-radius: 20px; /* Bordes redondos tipo píldora */
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.8em;
-            display: flex; justify-content: center; align-items: center; gap: 5px;
-            transition: background 0.2s;
+            background-color: #ddd;
         }
-        .watchlist-btn:hover { background-color: #f0f0f0; }
+        .poster-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
 
-        /* Formularios de Importación (Estilo sutil) */
-        .import-bar { background: #eee; padding: 15px; border-radius: 8px; margin-bottom: 30px; display: flex; gap: 15px; }
-        .import-bar form { flex: 1; display: flex; gap: 10px; }
-        .import-bar input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        .import-bar button { padding: 8px 15px; background: #333; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        /* Contenido de la tarjeta */
+        .card-info {
+            padding: 10px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .score-row {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .media-title {
+            font-size: 0.95em;
+            font-weight: bold;
+            margin: 0 0 10px 0;
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Limitar a 2 líneas */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-decoration: none;
+            color: #000;
+        }
+        .media-title:hover { color: #fa320a; }
+
+        /* Botón Watchlist */
+        .watchlist-btn {
+            background-color: white;
+            color: #333;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            padding: 5px 0;
+            font-size: 0.75em;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+            display: flex; justify-content: center; align-items: center; gap: 5px;
+        }
+        .watchlist-btn:hover {
+            background-color: #fa320a;
+            color: white;
+            border-color: #fa320a;
+        }
+
+        /* Barra de Importación (Más discreta) */
+        .import-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            border: 1px solid #e9ecef;
+        }
+        .import-row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .import-form { flex: 1; display: flex; gap: 10px; min-width: 300px; }
+        .import-form input { flex: 1; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; }
+        .import-form button { padding: 8px 15px; background-color: #343a40; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .import-form button:hover { background-color: #000; }
 
     </style>
 
-    <div class="import-bar">
-        <form action="{{ url_for('import_movie') }}" method="POST">
-            <input type="text" name="title" placeholder="Importar película (ej. Gladiator)" required>
-            <button type="submit">Importar</button>
-        </form>
-        <form action="{{ url_for('import_tv') }}" method="POST">
-            <input type="text" name="name" placeholder="Importar serie (ej. Breaking Bad)" required>
-            <button type="submit">Importar</button>
-        </form>
+    <div class="import-section">
+        <h3 style="margin-top:0;">Agregar Contenido</h3>
+        <div class="import-row">
+            <form action="{{ url_for('import_movie') }}" method="POST" class="import-form">
+                <input type="text" name="title" placeholder="Importar Película (ej. Matrix)" required>
+                <button type="submit">Buscar Película</button>
+            </form>
+            <form action="{{ url_for('import_tv') }}" method="POST" class="import-form">
+                <input type="text" name="name" placeholder="Importar Serie (ej. The Office)" required>
+                <button type="submit">Buscar Serie</button>
+            </form>
+        </div>
     </div>
 
-    <h2 class="section-title">Movies in Theaters & At Home</h2>
-    <div class="movie-grid">
-        {% for movie in movies %}
-            <div class="movie-card">
-                <a href="{{ url_for('movie_detail', movie_id=movie._id) }}" class="movie-poster-container">
-                    <img src="{{ movie.posterUrl or 'https://i.imgur.com/gA3S3jY.png' }}" alt="{{ movie.title }}">
+    {% if top_rated %}
+    <h2 class="category-title">🔥 Aclamadas por la Crítica</h2>
+    <div class="media-scroller">
+        {% for item in top_rated %}
+            <div class="media-card">
+                <a href="{{ url_for('movie_detail', content_id=item._id) }}" class="poster-frame">
+                    <img src="{{ item.posterUrl or 'https://via.placeholder.com/160x240?text=No+Image' }}" alt="{{ item.title or item.name }}">
                 </a>
+                <div class="card-info">
+                    <div class="score-row">
+                        <span style="font-size:1.2em;">🍅</span>
+                        {{ (item.voteAverage * 10)|round|int }}%
+                    </div>
+                    <a href="{{ url_for('movie_detail', content_id=item._id) }}" class="media-title">
+                        {{ item.title or item.name }}
+                    </a>
+                    <form action="{{ url_for('add_to_watchlist') }}" method="POST">
+                        <input type="hidden" name="movieId" value="{{ item._id }}">
+                        <button type="submit" class="watchlist-btn">
+                            <span>+</span> WATCHLIST
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 
-                <div class="card-content">
-                    <div class="score-badge">
+    <h2 class="category-title">🎬 Películas en Cartelera y Streaming</h2>
+    <div class="media-scroller">
+        {% for movie in movies %}
+            <div class="media-card">
+                <a href="{{ url_for('movie_detail', content_id=movie._id) }}" class="poster-frame">
+                    <img src="{{ movie.posterUrl or 'https://via.placeholder.com/160x240?text=No+Image' }}" alt="{{ movie.title }}">
+                </a>
+                <div class="card-info">
+                    <div class="score-row">
                         <span style="color: tomato;">🍅</span>
-                        {{ (movie.voteAverage * 10)|round|int }}%
+                        {% if movie.voteAverage %}
+                            {{ (movie.voteAverage * 10)|round|int }}%
+                        {% else %}
+                            --
+                        {% endif %}
                     </div>
 
-                    <a href="{{ url_for('movie_detail', movie_id=movie._id) }}" class="movie-title" title="{{ movie.title }}">
+                    <a href="{{ url_for('movie_detail', content_id=movie._id) }}" class="media-title" title="{{ movie.title }}">
                         {{ movie.title }}
                     </a>
 
@@ -102,7 +202,42 @@
                 </div>
             </div>
         {% else %}
-            <p>No hay películas. ¡Usa el importador arriba!</p>
+            <p style="padding: 0 15px;">No hay películas cargadas. ¡Usa el importador!</p>
         {% endfor %}
     </div>
+
+    <h2 class="category-title">📺 Series de TV Populares</h2>
+    <div class="media-scroller">
+        {% for show in tv_shows %}
+            <div class="media-card">
+                <a href="{{ url_for('movie_detail', content_id=show._id) }}" class="poster-frame">
+                    <img src="{{ show.posterUrl or 'https://via.placeholder.com/160x240?text=No+Image' }}" alt="{{ show.name }}">
+                </a>
+                <div class="card-info">
+                    <div class="score-row">
+                        <span style="color: tomato;">🍅</span>
+                        {% if show.voteAverage %}
+                            {{ (show.voteAverage * 10)|round|int }}%
+                        {% else %}
+                            --
+                        {% endif %}
+                    </div>
+
+                    <a href="{{ url_for('movie_detail', content_id=show._id) }}" class="media-title" title="{{ show.name }}">
+                        {{ show.name }}
+                    </a>
+
+                    <form action="{{ url_for('add_to_watchlist') }}" method="POST">
+                        <input type="hidden" name="movieId" value="{{ show._id }}">
+                        <button type="submit" class="watchlist-btn">
+                            <span>+</span> WATCHLIST
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <p style="padding: 0 15px;">No hay series cargadas. ¡Importa tu favorita!</p>
+        {% endfor %}
+    </div>
+
 {% endblock %}
