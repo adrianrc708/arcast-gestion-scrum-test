@@ -34,38 +34,97 @@ def get_auth_headers():
 # ... (Imports y configuraciones anteriores siguen igual) ...
 # Asegúrate de mantener todo lo anterior (imports, app config, decorators, etc.)
 
+# ... (imports y configuraciones) ...
+
 @app.route('/')
 def index():
-    """Ruta principal: Panel de control estilo Netflix/Rotten Tomatoes"""
-
-    # 1. Listas vacías por defecto
+    """Ruta principal: Panel de control estilo Netflix"""
     movies = []
     tv_shows = []
     top_rated = []
 
+    # Listas por género
+    action_movies = []
+    comedy_movies = []
+    horror_movies = []
+    drama_movies = []  # <-- NUEVO
+    scifi_movies = []  # <-- NUEVO
+    anim_movies = []  # <-- NUEVO
+
     try:
-        # 2. Obtener Películas
+        # 1. Obtener Películas
         resp_mov = requests.get(f"{BACKEND_API_URL}/movies")
         if resp_mov.status_code == 200:
             movies = resp_mov.json()
 
-        # 3. Obtener Series (Nueva ruta que creamos)
+            # Filtramos manualmente (limitamos a 12 para que el scroll se vea bien)
+            limit = 12
+            action_movies = [m for m in movies if 'Acción' in m.get('genres', [])][:limit]
+            comedy_movies = [m for m in movies if 'Comedia' in m.get('genres', [])][:limit]
+            horror_movies = [m for m in movies if 'Terror' in m.get('genres', [])][:limit]
+            drama_movies = [m for m in movies if 'Drama' in m.get('genres', [])][:limit]  # <-- NUEVO
+            scifi_movies = [m for m in movies if 'Ciencia ficción' in m.get('genres', [])][:limit]  # <-- NUEVO
+            anim_movies = [m for m in movies if 'Animación' in m.get('genres', [])][:limit]  # <-- NUEVO
+
+        # 2. Obtener Series
         resp_tv = requests.get(f"{BACKEND_API_URL}/tvshows")
         if resp_tv.status_code == 200:
             tv_shows = resp_tv.json()
 
-        # 4. Filtrar "Aclamadas por la crítica" (Puntuación > 7.5)
-        # Combinamos pelis y series y filtramos
+        # 3. Top Rated
         all_content = movies + tv_shows
-        # Filtramos los que tengan 'voteAverage' y sea mayor a 7.5
         top_rated = [item for item in all_content if item.get('voteAverage') and item.get('voteAverage') > 7.5]
-        # Ordenamos de mayor a menor puntaje
         top_rated.sort(key=lambda x: x['voteAverage'], reverse=True)
+        top_rated = top_rated[:12]  # Limitamos también
 
     except requests.exceptions.ConnectionError:
-        flash("Error: No se pudo conectar al backend.", "error")
+        flash("Error de conexión", "error")
 
-    return render_template('index.html', movies=movies, tv_shows=tv_shows, top_rated=top_rated)
+    return render_template('index.html',
+                           top_rated=top_rated,
+                           tv_shows=tv_shows[:12],
+                           action_movies=action_movies,
+                           comedy_movies=comedy_movies,
+                           horror_movies=horror_movies,
+                           drama_movies=drama_movies,  # <-- NUEVO
+                           scifi_movies=scifi_movies,  # <-- NUEVO
+                           anim_movies=anim_movies)  # <-- NUEVO
+
+# --- NUEVA RUTA: Ver Todo con Filtros ---
+@app.route('/view_all/<category>')
+def view_all(category):
+    """
+    category puede ser 'movies' o 'tvshows'.
+    Recibe query params: ?genre=Acción&sort=rating&platform=Netflix
+    """
+    # Obtener filtros de la URL
+    genre = request.args.get('genre')
+    sort = request.args.get('sort')
+    platform = request.args.get('platform')
+
+    items = []
+    endpoint = "movies" if category == 'movies' else "tvshows"
+
+    # Construir params para enviar al backend
+    params = {}
+    if genre: params['genre'] = genre
+    if sort: params['sort'] = sort
+    if platform: params['platform'] = platform
+
+    try:
+        response = requests.get(f"{BACKEND_API_URL}/{endpoint}", params=params)
+        if response.status_code == 200:
+            items = response.json()
+    except:
+        pass
+
+    return render_template('view_all.html',
+                           items=items,
+                           category=category,
+                           current_filters={'genre': genre, 'sort': sort, 'platform': platform})
+
+
+# ... (Resto de rutas: movie_detail, etc.) ...
 
 
 # ... (El resto de rutas: movie_detail, import, login, etc. SE MANTIENEN IGUAL) ...

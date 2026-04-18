@@ -55,16 +55,24 @@
             <p style="line-height: 1.6;">{{ movie.overview or 'Sin descripción.' }}</p>
 
             {% if movie.trailerKey %}
-                <div class="trailer-container">
-                    <h3>Trailer Oficial</h3>
-                    <div class="video-responsive">
-                        <iframe
-                            src="https://www.youtube.com/embed/{{ movie.trailerKey }}"
-                            frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen>
-                        </iframe>
-                    </div>
+                <div class="trailer-container" style="margin-top: 30px;">
+                    <h3>Trailer</h3>
+                    {% if movie.trailerKey %}
+                        <div class="video-responsive">
+                            <iframe
+                                src="https://www.youtube.com/embed/{{ movie.trailerKey }}"
+                                frameborder="0" allowfullscreen>
+                            </iframe>
+                        </div>
+                    {% else %}
+                        <div style="background:#f8f9fa; padding:30px; text-align:center; border-radius:8px; border:1px solid #ddd;">
+                            <p>No tenemos el trailer oficial en nuestra base de datos.</p>
+                            <a href="https://www.youtube.com/results?search_query={{ movie.title }} trailer español" target="_blank"
+                               style="background:#FF0000; color:white; padding:10px 20px; text-decoration:none; border-radius:5px; font-weight:bold;">
+                               ▶ Buscar Trailer en YouTube
+                            </a>
+                        </div>
+                    {% endif %}
                 </div>
             {% endif %}
         </div>
