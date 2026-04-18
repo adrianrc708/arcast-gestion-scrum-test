@@ -18,9 +18,28 @@ exports.createMovie = async (req, res) => {
 };
 
 // GET /api/movies -> listar todas
+// GET /api/movies -> listar con filtros
 exports.getAllMovies = async (req, res) => {
     try {
-        const movies = await Movie.find();
+        const { genre, platform, sort } = req.query;
+        let query = {};
+
+        // Filtro por Género
+        if (genre && genre !== 'Todas') {
+            query.genres = genre;
+        }
+        // Filtro por Plataforma
+        if (platform && platform !== 'Todas') {
+            query.platform = platform;
+        }
+
+        let sortOption = { date: -1 }; // Por defecto: más recientes agregadas
+
+        // Filtro de Ordenamiento
+        if (sort === 'rating') sortOption = { voteAverage: -1 }; // Mayor puntaje primero
+        if (sort === 'newest') sortOption = { releaseDate: -1 }; // Estreno más reciente
+
+        const movies = await Movie.find(query).sort(sortOption);
         res.json(movies);
     } catch (err) {
         res.status(500).json({ message: err.message });

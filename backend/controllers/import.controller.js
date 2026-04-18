@@ -6,13 +6,23 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_IMG_URL = 'https://image.tmdb.org/t/p/w500';
 
-// Función auxiliar para encontrar el trailer de YouTube
+// --- FUNCIÓN MEJORADA: Encuentra CUALQUIER video útil ---
 const findTrailer = (videos) => {
-    if (!videos || !videos.results) return null;
-    // Buscamos un video que sea "Trailer" y esté en "YouTube"
-    const trailer = videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
-    return trailer ? trailer.key : null; // Retornamos solo la clave (ej: d96cjJhvlMA)
+    if (!videos || !videos.results || videos.results.length === 0) return null;
+
+    // 1. Prioridad: Trailer Oficial
+    let video = videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
+
+    // 2. Segunda opción: Teaser
+    if (!video) video = videos.results.find(v => v.type === 'Teaser' && v.site === 'YouTube');
+
+    // 3. Última opción: Cualquier cosa que sea de YouTube (Clip, Featurette, etc.)
+    if (!video) video = videos.results.find(v => v.site === 'YouTube');
+
+    return video ? video.key : null;
 };
+
+// ... (el resto del archivo: importMovie, importTVShow sigue igual) ...
 
 // Importar PELÍCULA
 exports.importMovie = async (req, res) => {
