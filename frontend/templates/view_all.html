@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Explorar - ReelScore{% endblock %}
+
+{% block content %}
+<style>
+    .filters-bar {
+        background: #fff; border-bottom: 1px solid #ddd; padding: 15px 0; margin-bottom: 30px;
+        display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
+    }
+    .filter-group select {
+        padding: 8px 12px; border-radius: 20px; border: 1px solid #ccc;
+        background: white; cursor: pointer; font-size: 0.9em;
+    }
+    .filter-group label { font-weight: bold; margin-right: 5px; font-size: 0.9em; color: #555; }
+
+    .filter-btn {
+        padding: 8px 20px; background: #333; color: white; border: none;
+        border-radius: 20px; cursor: pointer;
+    }
+
+    .results-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 25px;
+    }
+
+    /* Reutilizamos estilos de tarjeta */
+    .media-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .poster-frame { height: 260px; display: block; background: #ddd; }
+    .poster-frame img { width: 100%; height: 100%; object-fit: cover; }
+    .card-info { padding: 10px; }
+</style>
+
+<h1>Explorar {{ category|capitalize }}</h1>
+
+<form action="{{ url_for('view_all', category=category) }}" method="GET" class="filters-bar">
+
+    <div class="filter-group">
+        <label>ORDENAR:</label>
+        <select name="sort" onchange="this.form.submit()">
+            <option value="newest" {% if current_filters.sort == 'newest' %}selected{% endif %}>Más Recientes</option>
+            <option value="rating" {% if current_filters.sort == 'rating' %}selected{% endif %}>Mejor Calificadas</option>
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label>GÉNERO:</label>
+        <select name="genre" onchange="this.form.submit()">
+            <option value="Todas">Todas</option>
+            <option value="Acción" {% if current_filters.genre == 'Acción' %}selected{% endif %}>Acción</option>
+            <option value="Comedia" {% if current_filters.genre == 'Comedia' %}selected{% endif %}>Comedia</option>
+            <option value="Terror" {% if current_filters.genre == 'Terror' %}selected{% endif %}>Terror</option>
+            <option value="Drama" {% if current_filters.genre == 'Drama' %}selected{% endif %}>Drama</option>
+        </select>
+    </div>
+
+    <div class="filter-group">
+        <label>PLATAFORMA:</label>
+        <select name="platform" onchange="this.form.submit()">
+            <option value="Todas">Todas</option>
+            <option value="Netflix" {% if current_filters.platform == 'Netflix' %}selected{% endif %}>Netflix</option>
+            <option value="Disney+" {% if current_filters.platform == 'Disney+' %}selected{% endif %}>Disney+</option>
+            <option value="HBO Max" {% if current_filters.platform == 'HBO Max' %}selected{% endif %}>HBO Max</option>
+            <option value="Amazon Prime" {% if current_filters.platform == 'Amazon Prime' %}selected{% endif %}>Amazon Prime</option>
+        </select>
+    </div>
+
+    <noscript><button type="submit" class="filter-btn">Aplicar</button></noscript>
+</form>
+
+<div class="results-grid">
+    {% for item in items %}
+        <div class="media-card">
+            <a href="{{ url_for('movie_detail', content_id=item._id) }}" class="poster-frame">
+                <img src="{{ item.posterUrl }}" alt="{{ item.title or item.name }}">
+            </a>
+            <div class="card-info">
+                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                    <span style="color:tomato; font-weight:bold;">🍅 {{ (item.voteAverage * 10)|int }}%</span>
+                    <span style="font-size:0.8em; background:#eee; padding:2px 5px; border-radius:4px;">{{ item.platform }}</span>
+                </div>
+                <a href="{{ url_for('movie_detail', content_id=item._id) }}" style="text-decoration:none; color:black; font-weight:bold;">
+                    {{ item.title or item.name }}
+                </a>
+
+                <form action="{{ url_for('add_to_watchlist') }}" method="POST" style="margin-top:10px;">
+                    <input type="hidden" name="movieId" value="{{ item._id }}">
+                    <button type="submit" style="width:100%; background:white; border:1px solid #333; padding:5px; cursor:pointer; border-radius:15px; font-weight:bold;">+ WATCHLIST</button>
+                </form>
+            </div>
+        </div>
+    {% else %}
+        <p>No se encontraron resultados con estos filtros.</p>
+    {% endfor %}
+</div>
+
+{% endblock %}
