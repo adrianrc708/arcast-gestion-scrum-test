@@ -1,39 +1,161 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Reseñas de Películas</title>
-    <style>
-        body { font-family: sans-serif; margin: 2em; }
-        ul { list-style: none; padding: 0; }
-        li { margin: 10px 0; }
-        a { font-size: 1.2em; text-decoration: none; color: #007bff; }
-        .form-new { background: #f4f4f4; padding: 15px; border-radius: 5px; }
-    </style>
-</head>
-<body>
-    <h1>Mini Plataforma de Reseñas</h1>
+{% extends "base.html" %}
+{% block title %}Inicio - ReelScore{% endblock %}
 
-    <div class="form-new">
-        <h3>Agregar Nueva Película</h3>
-        <form action="{{ url_for('add_movie') }}" method="POST">
-            <label for="title">Título:</label>
-            <input type="text" id="title" name="title" required>
-            <button type="submit">Agregar Película</button>
-        </form>
+{% block content %}
+    <style>
+        /* Estilos Generales */
+        h2.category-title {
+            font-size: 1.4em; margin-top: 40px; margin-bottom: 15px;
+            border-left: 5px solid #fa320a; padding-left: 15px;
+            text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* Link "Ver Todo" en la cabecera */
+        .view-all-link {
+            font-size: 0.6em; color: #007bff; text-decoration: none; letter-spacing: 0; text-transform: none; margin-right: 20px;
+        }
+        .view-all-link:hover { text-decoration: underline; }
+
+        /* Carrusel Horizontal */
+        .media-scroller {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: 160px;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+            padding-left: 5px;
+        }
+
+        /* Barra de scroll */
+        .media-scroller::-webkit-scrollbar { height: 8px; }
+        .media-scroller::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .media-scroller::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+        .media-scroller::-webkit-scrollbar-thumb:hover { background: #fa320a; }
+
+        /* Tarjeta */
+        .media-card {
+            background: white; border-radius: 8px; overflow: hidden;
+            transition: transform 0.2s ease; position: relative; border: 1px solid #eee;
+            display: flex; flex-direction: column;
+        }
+        .media-card:hover { transform: scale(1.03); box-shadow: 0 5px 15px rgba(0,0,0,0.15); z-index: 10; }
+
+        .poster-frame { height: 240px; width: 100%; background-color: #ddd; }
+        .poster-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+        .card-info { padding: 10px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .score-row { display: flex; align-items: center; gap: 5px; font-size: 0.85em; font-weight: bold; color: #333; margin-bottom: 5px; }
+
+        .media-title {
+            font-size: 0.95em; font-weight: bold; margin: 0 0 10px 0; line-height: 1.2;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+            text-decoration: none; color: #000;
+        }
+        .media-title:hover { color: #fa320a; }
+
+        .watchlist-btn {
+            background-color: white; color: #333; border: 1px solid #ccc; border-radius: 20px;
+            padding: 5px 0; font-size: 0.75em; font-weight: bold; cursor: pointer; width: 100%;
+            transition: all 0.2s; display: flex; justify-content: center; align-items: center; gap: 5px;
+        }
+        .watchlist-btn:hover { background-color: #fa320a; color: white; border-color: #fa320a; }
+
+        /* Barra de Importación */
+        .import-section { background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 40px; border: 1px solid #e9ecef; }
+        .import-row { display: flex; gap: 15px; flex-wrap: wrap; }
+        .import-form { flex: 1; display: flex; gap: 10px; min-width: 300px; }
+        .import-form input { flex: 1; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; }
+        .import-form button { padding: 8px 15px; background-color: #343a40; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .import-form button:hover { background-color: #000; }
+    </style>
+
+    {% macro render_row(title, items, genre_filter=None) %}
+        {% if items %}
+        <h2 class="category-title">
+            {{ title }}
+            {% if genre_filter %}
+                <a href="{{ url_for('view_all', category='movies', genre=genre_filter) }}" class="view-all-link">VIEW ALL ></a>
+            {% endif %}
+        </h2>
+        <div class="media-scroller">
+            {% for item in items %}
+                <div class="media-card">
+                    <a href="{{ url_for('movie_detail', content_id=item._id) }}" class="poster-frame">
+                        <img src="{{ item.posterUrl or 'https://via.placeholder.com/160x240?text=No+Image' }}" alt="{{ item.title or item.name }}">
+                    </a>
+                    <div class="card-info">
+                        <div class="score-row">
+                            <span style="font-size:1.2em;">🍅</span>
+                            {% if item.voteAverage %} {{ (item.voteAverage * 10)|round|int }}% {% else %} -- {% endif %}
+                        </div>
+                        <a href="{{ url_for('movie_detail', content_id=item._id) }}" class="media-title">
+                            {{ item.title or item.name }}
+                        </a>
+                        <form action="{{ url_for('add_to_watchlist') }}" method="POST">
+                            <input type="hidden" name="movieId" value="{{ item._id }}">
+                            <button type="submit" class="watchlist-btn"><span>+</span> WATCHLIST</button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endmacro %}
+
+    <div class="import-section">
+        <h3 style="margin-top:0;">Agregar Contenido</h3>
+        <div class="import-row">
+            <form action="{{ url_for('import_movie') }}" method="POST" class="import-form">
+                <input type="text" name="title" placeholder="Importar Película (ej. Matrix)" required>
+                <button type="submit">Buscar Película</button>
+            </form>
+            <form action="{{ url_for('import_tv') }}" method="POST" class="import-form">
+                <input type="text" name="name" placeholder="Importar Serie (ej. The Office)" required>
+                <button type="submit">Buscar Serie</button>
+            </form>
+        </div>
     </div>
 
-    <h2>Películas Disponibles (Desde MongoDB)</h2>
-    <ul>
-        {% for movie in movies %}
-            <li>
-                <a href="{{ url_for('movie_detail', movie_id=movie._id) }}">
-                    {{ movie.title }}
+    {{ render_row("🔥 Aclamadas por la Crítica", top_rated) }}
+
+    {{ render_row("💥 Acción y Aventura", action_movies, "Acción") }}
+
+    {{ render_row("😂 Comedias", comedy_movies, "Comedia") }}
+
+    {{ render_row("👻 Terror y Suspenso", horror_movies, "Terror") }}
+
+    {{ render_row("🎭 Dramas Intensos", drama_movies, "Drama") }}
+
+    {{ render_row("🚀 Ciencia Ficción", scifi_movies, "Ciencia ficción") }}
+
+    {{ render_row("🎨 Animación", anim_movies, "Animación") }}
+
+    <h2 class="category-title">
+        📺 Series de TV Populares
+        <a href="{{ url_for('view_all', category='tvshows') }}" class="view-all-link">VIEW ALL ></a>
+    </h2>
+    <div class="media-scroller">
+        {% for show in tv_shows %}
+            <div class="media-card">
+                <a href="{{ url_for('movie_detail', content_id=show._id) }}" class="poster-frame">
+                    <img src="{{ show.posterUrl or 'https://via.placeholder.com/160x240?text=No+Image' }}" alt="{{ show.name }}">
                 </a>
-            </li>
-        {% else %}
-            <li>No hay películas en la base de datos. ¡Agrega una!</li>
+                <div class="card-info">
+                    <div class="score-row">
+                        <span style="color: tomato;">🍅</span>
+                        {% if show.voteAverage %} {{ (show.voteAverage * 10)|round|int }}% {% else %} -- {% endif %}
+                    </div>
+                    <a href="{{ url_for('movie_detail', content_id=show._id) }}" class="media-title" title="{{ show.name }}">
+                        {{ show.name }}
+                    </a>
+                    <form action="{{ url_for('add_to_watchlist') }}" method="POST">
+                        <input type="hidden" name="movieId" value="{{ show._id }}">
+                        <button type="submit" class="watchlist-btn"><span>+</span> WATCHLIST</button>
+                    </form>
+                </div>
+            </div>
         {% endfor %}
-    </ul>
-</body>
-</html>
+    </div>
+
+{% endblock %}

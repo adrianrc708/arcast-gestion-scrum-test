@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Configuración de Cuenta{% endblock %}
+
+{% block content %}
+<style>
+    .settings-box {
+        max-width: 800px;
+    }
+    .settings-box input[type="text"] {
+        padding: 8px;
+        margin-left: 10px;
+    }
+    .settings-box button {
+        padding: 8px 12px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        border-radius: 3px;
+        margin-left: 10px;
+    }
+    .email-section {
+        margin-top: 30px;
+    }
+</style>
+
+<div class="settings-box">
+    <h2>Account Settings</h2>
+
+    <h3>Personal Information</h3>
+    <form action="{{ url_for('update_account') }}" method="POST" style="display: inline-flex; align-items: center;">
+        <label for="username">Current Name: </label>
+        <input type="text" id="username" name="username" value="{{ user.username }}" required>
+        <button type="submit">Change my name</button>
+    </form>
+
+    <hr style="margin-top: 20px;">
+
+    <div class="email-section">
+        <h3>Email Address</h3>
+        <p><strong>Current email:</strong> {{ user.email }}</p>
+    </div>
+</div>
+{% endblock %}
