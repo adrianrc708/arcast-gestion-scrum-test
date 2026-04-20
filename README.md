@@ -1,42 +1,21 @@
-# Mini Plataforma de Reseñas de Películas
+# Arcast - Guía de Inicio Rápido
 
-Proyecto full stack (Node.js/Express + Python/Flask) con MongoDB.
+**Requisitos:** Docker & Docker Compose instalado.
 
-## ¿Cómo ejecutar el proyecto? (Windows)
+### 1. Entrar a la raíz del proyecto
+```bash
+cd arcast
+```
+### 2. Configurar variables
 
-Necesitarás tener dos terminales abiertas (ej. una en WebStorm y otra en PyCharm).
+Crea el archivo .env dentro de la carpeta api-core/ usando como base el archivo .env.example que ya está ahí.
 
-### Backend (Node.js)
+### 3. Iniciar el sistema
+Desde la raíz del proyecto, ejecuta:
 
-1.  **Configurar:** Crea el archivo `backend/.env` (puedes copiar `backend/.env.example`) y pega tu `MONGO_URI` de MongoDB Atlas.
-2.  **Instalar:** Abre una terminal en `backend/` y ejecuta:
-    ```bash
-    npm install express mongoose dotenv cors
-    ```
-3.  **Ejecutar:** En esa misma terminal, corre el servidor:
-    ```bash
-    node server.js
-    ```
-*(El backend quedará corriendo en el puerto 5000)*
+```bash
+docker-compose up --build
+```
 
-### Frontend (Python)
-
-1.  **Configurar:** Abre una segunda terminal en `frontend/` y ejecuta estos dos comandos para crear y activar el entorno virtual:
-    ```bash
-    py -m venv venv
-    .\venv\Scripts\Activate
-    ```
-2.  **Instalar:** Con el `(venv)` activo, ejecuta:
-    ```bash
-    pip install Flask requests
-    ```
-3.  **Ejecutar:** En esa misma terminal, corre la app:
-    ```bash
-    py app.py
-    ```
-*(El frontend quedará corriendo en el puerto 8000)*
-
----
-**En resumen:** Configura el `.env` del backend. Luego, abre dos terminales: una para ejecutar `node server.js` (backend) y otra (con el `venv` activado) para ejecutar `py app.py` (frontend).
-
-**Abre `http://127.0.0.1:8000` en tu navegador.**
+### 4. Acceso
+Abre tu navegador en: http://localhost
