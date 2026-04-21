@@ -3,17 +3,16 @@
 
 {% block content %}
 <style>
-    .profile-layout { display: flex; gap: 20px; }
-    .profile-sidebar { flex: 0 0 280px; border: 1px solid #ddd; border-radius: 8px; padding: 20px; height: fit-content; }
+    .profile-layout { display: flex; gap: 20px; padding: 20px; }
+    .profile-sidebar { flex: 0 0 280px; border: 1px solid #ddd; border-radius: 8px; padding: 20px; height: fit-content; background: white; }
     .profile-sidebar .user-info { display: flex; align-items: center; margin-bottom: 20px; }
     .profile-sidebar img { border-radius: 50%; width: 50px; height: 50px; margin-right: 15px; }
     .profile-content { flex: 1; }
     .profile-section { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-    .item-list { border-bottom: 1px solid #eee; padding: 10px; text-align: left; }
+    .item-list { border-bottom: 1px solid #eee; padding: 10px; text-align: left; display:flex; justify-content:space-between; align-items:center; }
     .item-list a { text-decoration: none; color: #007bff; font-weight: bold; }
-    .btn-delete { background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; float: right; }
+    .btn-delete { background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; }
     .btn-delete:hover { background: #a71d2a; }
-    .icon { font-size: 2em; color: #ccc; text-align: center; display: block; margin: 10px 0; }
 </style>
 
 <div class="profile-layout">
@@ -37,16 +36,18 @@
                 {% if review.contentType == 'movie' or not review.contentType %}
                     {% set ns.found = true %}
                     <div class="item-list">
-                        <form action="{{ url_for('delete_review', review_id=review._id) }}" method="POST" style="display:inline;">
+                        <div>
+                            <a href="{{ url_for('movie_detail', content_id=review.movieId) }}">{{ review.movieTitle }}</a>
+                            - ({{ review.rating }}/5)
+                            <p style="margin:5px 0; color:#555;">{{ review.text }}</p>
+                        </div>
+                        <form action="{{ url_for('delete_review', review_id=review._id) }}" method="POST">
                             <button type="submit" class="btn-delete" onclick="return confirm('¿Borrar?')">X</button>
                         </form>
-                        <a href="{{ url_for('movie_detail', content_id=review.movieId) }}">{{ review.movieTitle }}</a>
-                        - ({{ review.rating }}/5)
-                        <p style="margin:5px 0; color:#555;">{{ review.text }}</p>
                     </div>
                 {% endif %}
             {% endfor %}
-            {% if not ns.found %}<div class="icon">★</div><p style="text-align:center;">No Movie Ratings Yet</p>{% endif %}
+            {% if not ns.found %}<p style="text-align:center;">No Movie Ratings Yet</p>{% endif %}
         </div>
 
         <div class="profile-section">
@@ -56,16 +57,18 @@
                 {% if review.contentType == 'tv' %}
                     {% set ns_tv.found = true %}
                     <div class="item-list">
-                        <form action="{{ url_for('delete_review', review_id=review._id) }}" method="POST" style="display:inline;">
+                        <div>
+                            <a href="{{ url_for('movie_detail', content_id=review.movieId) }}">{{ review.movieTitle }}</a>
+                            - ({{ review.rating }}/5)
+                            <p style="margin:5px 0; color:#555;">{{ review.text }}</p>
+                        </div>
+                        <form action="{{ url_for('delete_review', review_id=review._id) }}" method="POST">
                             <button type="submit" class="btn-delete" onclick="return confirm('¿Borrar?')">X</button>
                         </form>
-                        <a href="{{ url_for('movie_detail', content_id=review.movieId) }}">{{ review.movieTitle }}</a>
-                        - ({{ review.rating }}/5)
-                        <p style="margin:5px 0; color:#555;">{{ review.text }}</p>
                     </div>
                 {% endif %}
             {% endfor %}
-            {% if not ns_tv.found %}<div class="icon">★</div><p style="text-align:center;">No TV Ratings Yet</p>{% endif %}
+            {% if not ns_tv.found %}<p style="text-align:center;">No TV Ratings Yet</p>{% endif %}
         </div>
 
         <div class="profile-section">
@@ -74,20 +77,18 @@
                 {% for entry in my_watchlist %}
                     {% if entry.item %}
                         <div class="item-list">
-                            <form action="{{ url_for('remove_from_watchlist', item_id=entry.item._id) }}" method="POST" style="display:inline;">
-                                <button type="submit" class="btn-delete">Quitar</button>
-                            </form>
-
                             <a href="{{ url_for('movie_detail', content_id=entry.item._id) }}">
                                 {% if entry.kind == 'TVShow' %} 📺 {% else %} 🎬 {% endif %}
                                 {{ entry.item.title if entry.item.title else entry.item.name }}
                             </a>
+                            <form action="{{ url_for('remove_from_watchlist', item_id=entry.item._id) }}" method="POST">
+                                <button type="submit" class="btn-delete">Quitar</button>
+                            </form>
                         </div>
                     {% endif %}
                 {% endfor %}
             {% else %}
-                <div class="icon" style="line-height: 55px;">+</div>
-                <p><strong>Your Watchlist is Empty</strong></p>
+                <p style="text-align:center;">Your Watchlist is Empty</p>
             {% endif %}
         </div>
     </div>
