@@ -1,51 +1,174 @@
 {% extends "base.html" %}
-{% block title %}Explorar - ReelScore{% endblock %}
+{% block title %}Explorar - FilmLog{% endblock %}
 
 {% block content %}
 <style>
+    /* Barra de Filtros Oscura */
     .filters-bar {
-        background: #fff; border-bottom: 1px solid #ddd; padding: 15px 0; margin-bottom: 30px;
-        display: flex; gap: 15px; align-items: center; flex-wrap: wrap;
+        background-color: var(--bg-card); /* Fondo gris oscuro */
+        border-bottom: 1px solid var(--border);
+        padding: 20px 40px;
+        margin-bottom: 30px;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex-wrap: wrap;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
-    .filter-group select {
-        padding: 8px 12px; border-radius: 20px; border: 1px solid #ccc;
-        background: white; cursor: pointer; font-size: 0.9em;
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
-    .filter-group label { font-weight: bold; margin-right: 5px; font-size: 0.9em; color: #555; }
+
+    .filter-group label {
+        font-weight: bold;
+        font-size: 0.9em;
+        color: var(--text-muted); /* Texto gris claro */
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Selectores Estilizados */
+    .filter-select {
+        background-color: #000;
+        border: 1px solid var(--border);
+        color: var(--text-main);
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+    .filter-select:hover, .filter-select:focus {
+        border-color: var(--accent);
+    }
 
     .filter-btn {
-        padding: 8px 20px; background: #333; color: white; border: none;
-        border-radius: 20px; cursor: pointer;
+        padding: 10px 25px;
+        background-color: var(--accent);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        text-transform: uppercase;
     }
 
+    /* Grid de Resultados */
     .results-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
         gap: 25px;
+        padding: 0 40px 60px 40px;
     }
 
-    /* Reutilizamos estilos de tarjeta */
-    .media-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .poster-frame { height: 260px; display: block; background: #ddd; }
-    .poster-frame img { width: 100%; height: 100%; object-fit: cover; }
-    .card-info { padding: 10px; }
+    /* Tarjeta Estilo Dark */
+    .media-card {
+        background-color: var(--bg-card);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid var(--border);
+        position: relative;
+    }
+
+    .media-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        border-color: var(--text-muted);
+        z-index: 2;
+    }
+
+    .poster-frame {
+        height: 300px;
+        display: block;
+        background-color: #111;
+        position: relative;
+        overflow: hidden;
+    }
+    .poster-frame img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+    .media-card:hover .poster-frame img {
+        transform: scale(1.05);
+    }
+
+    .card-info {
+        padding: 15px;
+    }
+
+    .card-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 0.85em;
+    }
+
+    .score { color: #46d369; font-weight: bold; }
+    .platform-tag {
+        background: rgba(255,255,255,0.1);
+        color: var(--text-muted);
+        padding: 2px 6px;
+        border-radius: 3px;
+    }
+
+    .card-title-link {
+        text-decoration: none;
+        color: var(--text-main);
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    .card-title {
+        font-weight: bold;
+        font-size: 1em;
+        line-height: 1.3;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .card-title:hover { color: var(--accent); }
+
+    .watchlist-btn {
+        width: 100%;
+        background-color: rgba(255,255,255,0.1);
+        color: var(--text-main);
+        border: 1px solid transparent;
+        padding: 8px;
+        cursor: pointer;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 0.8em;
+        transition: all 0.2s;
+    }
+    .watchlist-btn:hover {
+        background-color: var(--accent);
+        color: white;
+    }
+
+    h1 { color: var(--text-main); padding: 30px 40px 0 40px; }
 </style>
 
 <h1>Explorar {{ category|capitalize }}</h1>
 
 <form action="{{ url_for('view_all', category=category) }}" method="GET" class="filters-bar">
-
     <div class="filter-group">
-        <label>ORDENAR:</label>
-        <select name="sort" onchange="this.form.submit()">
+        <label>Ordenar:</label>
+        <select name="sort" class="filter-select" onchange="this.form.submit()">
             <option value="newest" {% if current_filters.sort == 'newest' %}selected{% endif %}>Más Recientes</option>
-            <option value="rating" {% if current_filters.sort == 'rating' %}selected{% endif %}>Mejor Calificadas</option>
+            <option value="rating" {% if current_filters.sort == 'rating' %}selected{% endif %}>Mejor Valoradas</option>
         </select>
     </div>
 
     <div class="filter-group">
-        <label>GÉNERO:</label>
-        <select name="genre" onchange="this.form.submit()">
+        <label>Género:</label>
+        <select name="genre" class="filter-select" onchange="this.form.submit()">
             <option value="Todas">Todas</option>
             <option value="Acción" {% if current_filters.genre == 'Acción' %}selected{% endif %}>Acción</option>
             <option value="Comedia" {% if current_filters.genre == 'Comedia' %}selected{% endif %}>Comedia</option>
@@ -55,43 +178,44 @@
     </div>
 
     <div class="filter-group">
-        <label>PLATAFORMA:</label>
-        <select name="platform" onchange="this.form.submit()">
+        <label>Plataforma:</label>
+        <select name="platform" class="filter-select" onchange="this.form.submit()">
             <option value="Todas">Todas</option>
             <option value="Netflix" {% if current_filters.platform == 'Netflix' %}selected{% endif %}>Netflix</option>
-            <option value="Disney+" {% if current_filters.platform == 'Disney+' %}selected{% endif %}>Disney+</option>
-            <option value="HBO Max" {% if current_filters.platform == 'HBO Max' %}selected{% endif %}>HBO Max</option>
-            <option value="Amazon Prime" {% if current_filters.platform == 'Amazon Prime' %}selected{% endif %}>Amazon Prime</option>
+            <option value="Disney" {% if current_filters.platform == 'Disney' %}selected{% endif %}>Disney+</option>
+            <option value="HBO" {% if current_filters.platform == 'HBO' %}selected{% endif %}>HBO Max</option>
+            <option value="Amazon" {% if current_filters.platform == 'Amazon' %}selected{% endif %}>Amazon Prime</option>
         </select>
     </div>
-
-    <noscript><button type="submit" class="filter-btn">Aplicar</button></noscript>
 </form>
 
 <div class="results-grid">
     {% for item in items %}
         <div class="media-card">
-            <a href="{{ url_for('movie_detail', content_id=item._id) }}" class="poster-frame">
-                <img src="{{ item.posterUrl }}" alt="{{ item.title or item.name }}">
-            </a>
-            <div class="card-info">
-                <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-                    <span style="color:tomato; font-weight:bold;">🍅 {{ (item.voteAverage * 10)|int }}%</span>
-                    <span style="font-size:0.8em; background:#eee; padding:2px 5px; border-radius:4px;">{{ item.platform }}</span>
-                </div>
-                <a href="{{ url_for('movie_detail', content_id=item._id) }}" style="text-decoration:none; color:black; font-weight:bold;">
-                    {{ item.title or item.name }}
+            <div class="poster-frame">
+                <a href="{{ url_for('movie_detail', content_id=item._id) }}">
+                    <img src="{{ item.posterUrl }}" alt="{{ item.title or item.name }}">
                 </a>
-
-                <form action="{{ url_for('add_to_watchlist') }}" method="POST" style="margin-top:10px;">
+            </div>
+            <div class="card-info">
+                <div class="card-meta">
+                    <span class="score">🍅 {{ (item.voteAverage * 10)|int }}%</span>
+                    {% if item.platformName %}
+                        <span class="platform-tag">{{ item.platformName[:10] }}</span>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('movie_detail', content_id=item._id) }}" class="card-title-link">
+                    <div class="card-title">{{ item.title or item.name }}</div>
+                </a>
+                <form action="{{ url_for('add_to_watchlist') }}" method="POST">
                     <input type="hidden" name="movieId" value="{{ item._id }}">
-                    <button type="submit" style="width:100%; background:white; border:1px solid #333; padding:5px; cursor:pointer; border-radius:15px; font-weight:bold;">+ WATCHLIST</button>
+                    <input type="hidden" name="contentType" value="{{ 'tv' if category == 'tvshows' else 'movie' }}">
+                    <button type="submit" class="watchlist-btn">+ Mi Lista</button>
                 </form>
             </div>
         </div>
     {% else %}
-        <p>No se encontraron resultados con estos filtros.</p>
+        <p style="padding: 40px; color: var(--text-muted);">No se encontraron resultados con estos filtros.</p>
     {% endfor %}
 </div>
-
 {% endblock %}

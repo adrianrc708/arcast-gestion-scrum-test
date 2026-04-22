@@ -1,96 +1,256 @@
 {% extends "base.html" %}
-{% block title %}Mi Perfil{% endblock %}
+{% block title %}Mi Perfil - FilmLog{% endblock %}
 
 {% block content %}
 <style>
-    .profile-layout { display: flex; gap: 20px; padding: 20px; }
-    .profile-sidebar { flex: 0 0 280px; border: 1px solid #ddd; border-radius: 8px; padding: 20px; height: fit-content; background: white; }
-    .profile-sidebar .user-info { display: flex; align-items: center; margin-bottom: 20px; }
-    .profile-sidebar img { border-radius: 50%; width: 50px; height: 50px; margin-right: 15px; }
-    .profile-content { flex: 1; }
-    .profile-section { background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-    .item-list { border-bottom: 1px solid #eee; padding: 10px; text-align: left; display:flex; justify-content:space-between; align-items:center; }
-    .item-list a { text-decoration: none; color: #007bff; font-weight: bold; }
-    .btn-delete { background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em; }
-    .btn-delete:hover { background: #a71d2a; }
+    /* Layout */
+    .profile-layout {
+        display: grid;
+        grid-template-columns: 280px 1fr;
+        gap: 30px;
+        padding: 40px 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    /* Sidebar Izquierda */
+    .profile-sidebar {
+        background-color: var(--bg-card); /* Gris oscuro */
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        height: fit-content;
+    }
+
+    .user-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        margin-bottom: 15px;
+        border: 2px solid var(--accent);
+        padding: 2px;
+    }
+
+    .user-name { font-size: 1.4em; font-weight: bold; color: var(--text-main); margin-bottom: 5px; }
+    .user-email { color: var(--text-muted); font-size: 0.9em; margin-bottom: 20px; }
+
+    .btn-outline {
+        display: block;
+        width: 100%;
+        padding: 8px 0;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--text-main);
+        text-decoration: none;
+        font-size: 0.9em;
+        transition: background 0.2s;
+    }
+    .btn-outline:hover { background-color: var(--bg-hover); }
+
+    /* Contenido Derecha */
+    .profile-content { display: flex; flex-direction: column; gap: 30px; }
+
+    .content-box {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden; /* Para que el header no salga */
+    }
+
+    .box-header {
+        background-color: rgba(255,255,255,0.03);
+        padding: 15px 25px;
+        border-bottom: 1px solid var(--border);
+        font-size: 1.1em;
+        font-weight: bold;
+        color: var(--text-main);
+        display: flex; justify-content: space-between; align-items: center;
+    }
+
+    .box-body {
+        padding: 0 25px;
+    }
+
+    /* Items de Lista */
+    .list-item {
+        padding: 15px 0;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .list-item:last-child { border-bottom: none; }
+
+    .item-info { flex: 1; }
+
+    .item-title {
+        font-weight: bold;
+        font-size: 1.05em;
+        color: var(--text-main);
+        text-decoration: none;
+    }
+    .item-title:hover { color: var(--accent); text-decoration: underline; }
+
+    .item-meta {
+        font-size: 0.85em;
+        color: var(--text-muted);
+        margin-top: 4px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .rating-star { color: gold; }
+
+    /* Botones de acción */
+    .btn-remove {
+        background-color: transparent;
+        color: #e50914; /* Rojo */
+        border: 1px solid #e50914;
+        padding: 5px 12px;
+        border-radius: 4px;
+        font-size: 0.75em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-remove:hover {
+        background-color: #e50914;
+        color: white;
+    }
+
+    /* Estados vacíos */
+    .empty-state {
+        padding: 40px;
+        text-align: center;
+        color: var(--text-muted);
+    }
+    .empty-icon { font-size: 2em; margin-bottom: 10px; display: block; opacity: 0.3; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .profile-layout { grid-template-columns: 1fr; }
+        .profile-sidebar { text-align: left; display: flex; align-items: center; gap: 20px; }
+        .user-avatar { margin-bottom: 0; width: 60px; height: 60px; }
+    }
 </style>
 
 <div class="profile-layout">
     <div class="profile-sidebar">
-        <h3>Profile</h3>
-        <div class="user-info">
-            <img src="https://i.imgur.com/b08hx78.png" alt="Avatar">
-            <div>
-                <strong>{{ session.get('username') }}</strong>
-                <p style="font-size:0.9em; color:#666;">{{ session.get('user_email') }}</p>
-            </div>
+        <img src="https://i.imgur.com/b08hx78.png" class="user-avatar">
+        <div>
+            <div class="user-name">{{ session.get('username') }}</div>
+            <div class="user-email">{{ session.get('user_email') }}</div>
+            <a href="{{ url_for('account') }}" class="btn-outline" style="width: auto; padding: 5px 15px; display: inline-block; margin-top: 5px;">Editar Cuenta</a>
         </div>
-        <a href="{{ url_for('account') }}" style="color:#007bff; text-decoration:none;">Manage Account</a>
     </div>
 
     <div class="profile-content">
-        <div class="profile-section">
-            <h3>My Movie Ratings</h3>
-            {% set ns = namespace(found=false) %}
-            {% for review in my_reviews %}
-                {% if review.contentType == 'movie' or not review.contentType %}
-                    {% set ns.found = true %}
-                    <div class="item-list">
-                        <div>
-                            <a href="{{ url_for('movie_detail', content_id=review.movieId) }}">{{ review.movieTitle }}</a>
-                            - ({{ review.rating }}/5)
-                            <p style="margin:5px 0; color:#555;">{{ review.text }}</p>
-                        </div>
-                        <form action="{{ url_for('delete_review', review_id=review._id) }}" method="POST">
-                            <button type="submit" class="btn-delete" onclick="return confirm('¿Borrar?')">X</button>
-                        </form>
-                    </div>
-                {% endif %}
-            {% endfor %}
-            {% if not ns.found %}<p style="text-align:center;">No Movie Ratings Yet</p>{% endif %}
-        </div>
 
-        <div class="profile-section">
-            <h3>My TV Ratings</h3>
-            {% set ns_tv = namespace(found=false) %}
-            {% for review in my_reviews %}
-                {% if review.contentType == 'tv' %}
-                    {% set ns_tv.found = true %}
-                    <div class="item-list">
-                        <div>
-                            <a href="{{ url_for('movie_detail', content_id=review.movieId) }}">{{ review.movieTitle }}</a>
-                            - ({{ review.rating }}/5)
-                            <p style="margin:5px 0; color:#555;">{{ review.text }}</p>
-                        </div>
-                        <form action="{{ url_for('delete_review', review_id=review._id) }}" method="POST">
-                            <button type="submit" class="btn-delete" onclick="return confirm('¿Borrar?')">X</button>
-                        </form>
-                    </div>
-                {% endif %}
-            {% endfor %}
-            {% if not ns_tv.found %}<p style="text-align:center;">No TV Ratings Yet</p>{% endif %}
-        </div>
-
-        <div class="profile-section">
-            <h3>My Watchlist</h3>
-            {% if my_watchlist %}
-                {% for entry in my_watchlist %}
-                    {% if entry.item %}
-                        <div class="item-list">
-                            <a href="{{ url_for('movie_detail', content_id=entry.item._id) }}">
-                                {% if entry.kind == 'TVShow' %} 📺 {% else %} 🎬 {% endif %}
-                                {{ entry.item.title if entry.item.title else entry.item.name }}
-                            </a>
-                            <form action="{{ url_for('remove_from_watchlist', item_id=entry.item._id) }}" method="POST">
-                                <button type="submit" class="btn-delete">Quitar</button>
+        <div class="content-box">
+            <div class="box-header">
+                <span>🎬 Reseñas de Películas</span>
+            </div>
+            <div class="box-body">
+                {% set ns = namespace(found=false) %}
+                {% for review in my_reviews %}
+                    {% if review.contentType == 'movie' or not review.contentType %}
+                        {% set ns.found = true %}
+                        <div class="list-item">
+                            <div class="item-info">
+                                <a href="{{ url_for('movie_detail', content_id=review.movieId) }}" class="item-title">
+                                    {{ review.movieTitle }}
+                                </a>
+                                <div class="item-meta">
+                                    <span class="rating-star">★ {{ review.rating }}/5</span>
+                                    <span>• "{{ review.text }}"</span>
+                                </div>
+                            </div>
+                            <form action="{{ url_for('delete_review', review_id=review._id) }}" method="POST">
+                                <button type="submit" class="btn-remove" onclick="return confirm('¿Eliminar reseña?')">Eliminar</button>
                             </form>
                         </div>
                     {% endif %}
                 {% endfor %}
-            {% else %}
-                <p style="text-align:center;">Your Watchlist is Empty</p>
-            {% endif %}
+
+                {% if not ns.found %}
+                    <div class="empty-state">
+                        <span class="empty-icon">☆</span>
+                        No has escrito reseñas de películas aún.
+                    </div>
+                {% endif %}
+            </div>
         </div>
+
+        <div class="content-box">
+            <div class="box-header">
+                <span>📺 Reseñas de Series</span>
+            </div>
+            <div class="box-body">
+                {% set ns_tv = namespace(found=false) %}
+                {% for review in my_reviews %}
+                    {% if review.contentType == 'tv' %}
+                        {% set ns_tv.found = true %}
+                        <div class="list-item">
+                            <div class="item-info">
+                                <a href="{{ url_for('movie_detail', content_id=review.movieId) }}" class="item-title">
+                                    {{ review.movieTitle }}
+                                </a>
+                                <div class="item-meta">
+                                    <span class="rating-star">★ {{ review.rating }}/5</span>
+                                    <span>• "{{ review.text }}"</span>
+                                </div>
+                            </div>
+                            <form action="{{ url_for('delete_review', review_id=review._id) }}" method="POST">
+                                <button type="submit" class="btn-remove" onclick="return confirm('¿Eliminar reseña?')">Eliminar</button>
+                            </form>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                {% if not ns_tv.found %}
+                    <div class="empty-state">
+                        <span class="empty-icon">☆</span>
+                        No has escrito reseñas de series aún.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="content-box">
+            <div class="box-header">
+                <span>bookmark Mi Lista de Seguimiento</span>
+                <span style="font-size:0.8em; color:var(--text-muted)">{{ my_watchlist|length }} títulos</span>
+            </div>
+            <div class="box-body">
+                {% if my_watchlist %}
+                    {% for entry in my_watchlist %}
+                        {% if entry.item %}
+                            <div class="list-item">
+                                <div class="item-info">
+                                    <a href="{{ url_for('movie_detail', content_id=entry.item._id) }}" class="item-title">
+                                        {{ entry.item.title if entry.item.title else entry.item.name }}
+                                    </a>
+                                    <div class="item-meta">
+                                        {% if entry.kind == 'TVShow' %}SERIE DE TV{% else %}PELÍCULA{% endif %}
+                                    </div>
+                                </div>
+                                <form action="{{ url_for('remove_from_watchlist', item_id=entry.item._id) }}" method="POST">
+                                    <button type="submit" class="btn-remove">Quitar</button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <span class="empty-icon">+</span>
+                        Tu lista de seguimiento está vacía.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
     </div>
 </div>
 {% endblock %}
