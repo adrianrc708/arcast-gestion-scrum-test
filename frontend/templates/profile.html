@@ -1,252 +1,211 @@
 {% extends "base.html" %}
-{% block title %}Mi Perfil - FilmLog{% endblock %}
+{% block title %}Mi Perfil{% endblock %}
 
 {% block content %}
 <style>
-    /* Layout */
+    /* Layout Principal */
     .profile-layout {
         display: grid;
-        grid-template-columns: 280px 1fr;
-        gap: 30px;
+        grid-template-columns: 300px 1fr;
+        gap: 40px;
         padding: 40px 20px;
-        max-width: 1200px;
+        max-width: 1300px;
         margin: 0 auto;
     }
 
-    /* Sidebar Izquierda */
+    /* Sidebar */
     .profile-sidebar {
-        background-color: var(--bg-card); /* Gris oscuro */
+        background: var(--bg-card);
         border: 1px solid var(--border);
-        border-radius: 8px;
+        border-radius: 12px;
         padding: 30px;
         text-align: center;
         height: fit-content;
+        position: sticky;
+        top: 100px;
     }
-
-    .user-avatar {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        margin-bottom: 15px;
-        border: 2px solid var(--accent);
-        padding: 2px;
+    .profile-avatar {
+        width: 120px; height: 120px;
+        border-radius: 50%; object-fit: cover;
+        border: 4px solid var(--bg-main);
+        box-shadow: 0 0 0 2px var(--accent);
+        margin-bottom: 20px;
     }
-
-    .user-name { font-size: 1.4em; font-weight: bold; color: var(--text-main); margin-bottom: 5px; }
-    .user-email { color: var(--text-muted); font-size: 0.9em; margin-bottom: 20px; }
-
-    .btn-outline {
-        display: block;
-        width: 100%;
-        padding: 8px 0;
-        border: 1px solid var(--border);
-        border-radius: 4px;
-        color: var(--text-main);
-        text-decoration: none;
-        font-size: 0.9em;
-        transition: background 0.2s;
+    .user-name { font-size: 1.5rem; font-weight: 800; color: white; margin-bottom: 5px; }
+    .user-email { color: #888; font-size: 0.9rem; margin-bottom: 25px; }
+    .edit-btn {
+        display: block; width: 100%; padding: 10px;
+        background: transparent; border: 1px solid #555; color: white;
+        border-radius: 6px; text-decoration: none; transition: 0.2s;
     }
-    .btn-outline:hover { background-color: var(--bg-hover); }
+    .edit-btn:hover { background: #333; border-color: white; }
 
-    /* Contenido Derecha */
-    .profile-content { display: flex; flex-direction: column; gap: 30px; }
+    /* Contenido */
+    .profile-content { display: flex; flex-direction: column; gap: 40px; }
 
-    .content-box {
-        background-color: var(--bg-card);
+    .section-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+    }
+    .section-title { font-size: 1.4rem; font-weight: bold; color: white; display: flex; align-items: center; gap: 10px; }
+    .badge-count { background: #333; font-size: 0.8rem; padding: 2px 8px; border-radius: 10px; color: #ccc; }
+
+    /* TARJETAS HORIZONTALES (Listas modernas) */
+    .media-list { display: flex; flex-direction: column; gap: 15px; }
+
+    .horizontal-card {
+        display: flex;
+        background: var(--bg-card);
         border: 1px solid var(--border);
         border-radius: 8px;
-        overflow: hidden; /* Para que el header no salga */
+        overflow: hidden;
+        height: 140px; /* Altura fija */
+        transition: transform 0.2s;
+    }
+    .horizontal-card:hover {
+        transform: translateX(5px);
+        border-color: #555;
     }
 
-    .box-header {
-        background-color: rgba(255,255,255,0.03);
-        padding: 15px 25px;
-        border-bottom: 1px solid var(--border);
-        font-size: 1.1em;
-        font-weight: bold;
-        color: var(--text-main);
-        display: flex; justify-content: space-between; align-items: center;
+    .card-poster {
+        width: 100px;
+        flex-shrink: 0;
+        background: black;
     }
+    .card-poster img { width: 100%; height: 100%; object-fit: cover; }
 
-    .box-body {
-        padding: 0 25px;
-    }
-
-    /* Items de Lista */
-    .list-item {
-        padding: 15px 0;
-        border-bottom: 1px solid var(--border);
+    .card-body {
+        flex: 1;
+        padding: 20px;
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        flex-direction: column;
+        justify-content: center;
     }
-    .list-item:last-child { border-bottom: none; }
 
-    .item-info { flex: 1; }
-
-    .item-title {
-        font-weight: bold;
-        font-size: 1.05em;
-        color: var(--text-main);
-        text-decoration: none;
+    .card-title {
+        font-size: 1.2rem; font-weight: bold; color: white; text-decoration: none;
+        margin-bottom: 5px;
     }
-    .item-title:hover { color: var(--accent); text-decoration: underline; }
+    .card-title:hover { color: var(--accent); }
 
-    .item-meta {
-        font-size: 0.85em;
-        color: var(--text-muted);
-        margin-top: 4px;
+    .card-subtitle { color: #888; font-size: 0.9rem; margin-bottom: 10px; }
+
+    .user-rating { color: gold; font-weight: bold; font-size: 0.9rem; }
+
+    .card-actions {
+        padding: 20px;
         display: flex;
-        gap: 10px;
         align-items: center;
+        border-left: 1px solid var(--border);
     }
 
-    .rating-star { color: gold; }
-
-    /* Botones de acción */
-    .btn-remove {
-        background-color: transparent;
-        color: #e50914; /* Rojo */
-        border: 1px solid #e50914;
-        padding: 5px 12px;
-        border-radius: 4px;
-        font-size: 0.75em;
-        font-weight: bold;
+    .btn-icon {
+        background: rgba(255, 50, 50, 0.1);
+        color: #ff4444;
+        border: none;
+        width: 40px; height: 40px;
+        border-radius: 50%;
         cursor: pointer;
-        transition: all 0.2s;
+        display: flex; align-items: center; justify-content: center;
+        transition: 0.2s;
+        font-size: 1.2rem;
     }
-    .btn-remove:hover {
-        background-color: #e50914;
-        color: white;
+    .btn-icon:hover { background: #ff4444; color: white; }
+
+    .empty-box {
+        text-align: center; padding: 40px; background: rgba(255,255,255,0.02);
+        border-radius: 8px; border: 1px dashed #444; color: #666;
     }
 
-    /* Estados vacíos */
-    .empty-state {
-        padding: 40px;
-        text-align: center;
-        color: var(--text-muted);
-    }
-    .empty-icon { font-size: 2em; margin-bottom: 10px; display: block; opacity: 0.3; }
-
-    /* Responsive */
     @media (max-width: 768px) {
         .profile-layout { grid-template-columns: 1fr; }
-        .profile-sidebar { text-align: left; display: flex; align-items: center; gap: 20px; }
-        .user-avatar { margin-bottom: 0; width: 60px; height: 60px; }
+        .profile-sidebar { position: static; margin-bottom: 30px; }
+        .horizontal-card { height: auto; flex-direction: column; }
+        .card-poster { width: 100%; height: 200px; }
+        .card-actions { border-left: none; border-top: 1px solid var(--border); justify-content: flex-end; }
     }
 </style>
 
 <div class="profile-layout">
-    <div class="profile-sidebar">
-        <img src="https://i.imgur.com/b08hx78.png" class="user-avatar">
-        <div>
-            <div class="user-name">{{ session.get('username') }}</div>
-            <div class="user-email">{{ session.get('user_email') }}</div>
-            <a href="{{ url_for('account') }}" class="btn-outline" style="width: auto; padding: 5px 15px; display: inline-block; margin-top: 5px;">Editar Cuenta</a>
-        </div>
-    </div>
+    <aside class="profile-sidebar">
+        <img src="https://i.imgur.com/b08hx78.png" class="profile-avatar">
+        <div class="user-name">{{ session.get('username') }}</div>
+        <div class="user-email">{{ session.get('user_email') }}</div>
+        <a href="{{ url_for('account') }}" class="edit-btn">⚙️ Configuración</a>
+    </aside>
 
     <div class="profile-content">
 
-        <div class="content-box">
-            <div class="box-header">
-                <span>🎬 Reseñas de Películas</span>
+        <div>
+            <div class="section-header">
+                <div class="section-title">🔖 Mi Lista <span class="badge-count">{{ my_watchlist|length }}</span></div>
             </div>
-            <div class="box-body">
-                {% set ns = namespace(found=false) %}
-                {% for review in my_reviews %}
-                    {% if review.contentType == 'movie' or not review.contentType %}
-                        {% set ns.found = true %}
-                        <div class="list-item">
-                            <div class="item-info">
-                                <a href="{{ url_for('movie_detail', content_id=review.movieId) }}" class="item-title">
-                                    {{ review.movieTitle }}
-                                </a>
-                                <div class="item-meta">
-                                    <span class="rating-star">★ {{ review.rating }}/5</span>
-                                    <span>• "{{ review.text }}"</span>
-                                </div>
-                            </div>
-                            <form action="{{ url_for('delete_review', review_id=review._id) }}" method="POST">
-                                <button type="submit" class="btn-remove" onclick="return confirm('¿Eliminar reseña?')">Eliminar</button>
-                            </form>
-                        </div>
-                    {% endif %}
-                {% endfor %}
 
-                {% if not ns.found %}
-                    <div class="empty-state">
-                        <span class="empty-icon">☆</span>
-                        No has escrito reseñas de películas aún.
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="content-box">
-            <div class="box-header">
-                <span>📺 Reseñas de Series</span>
-            </div>
-            <div class="box-body">
-                {% set ns_tv = namespace(found=false) %}
-                {% for review in my_reviews %}
-                    {% if review.contentType == 'tv' %}
-                        {% set ns_tv.found = true %}
-                        <div class="list-item">
-                            <div class="item-info">
-                                <a href="{{ url_for('movie_detail', content_id=review.movieId) }}" class="item-title">
-                                    {{ review.movieTitle }}
-                                </a>
-                                <div class="item-meta">
-                                    <span class="rating-star">★ {{ review.rating }}/5</span>
-                                    <span>• "{{ review.text }}"</span>
-                                </div>
-                            </div>
-                            <form action="{{ url_for('delete_review', review_id=review._id) }}" method="POST">
-                                <button type="submit" class="btn-remove" onclick="return confirm('¿Eliminar reseña?')">Eliminar</button>
-                            </form>
-                        </div>
-                    {% endif %}
-                {% endfor %}
-
-                {% if not ns_tv.found %}
-                    <div class="empty-state">
-                        <span class="empty-icon">☆</span>
-                        No has escrito reseñas de series aún.
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-
-        <div class="content-box">
-            <div class="box-header">
-                <span>bookmark Mi Lista de Seguimiento</span>
-                <span style="font-size:0.8em; color:var(--text-muted)">{{ my_watchlist|length }} títulos</span>
-            </div>
-            <div class="box-body">
+            <div class="media-list">
                 {% if my_watchlist %}
                     {% for entry in my_watchlist %}
                         {% if entry.item %}
-                            <div class="list-item">
-                                <div class="item-info">
-                                    <a href="{{ url_for('movie_detail', content_id=entry.item._id) }}" class="item-title">
-                                        {{ entry.item.title if entry.item.title else entry.item.name }}
-                                    </a>
-                                    <div class="item-meta">
-                                        {% if entry.kind == 'TVShow' %}SERIE DE TV{% else %}PELÍCULA{% endif %}
-                                    </div>
+                        <div class="horizontal-card">
+                            <a href="{{ url_for('movie_detail', content_id=entry.item._id) }}" class="card-poster">
+                                <img src="{{ entry.item.posterUrl }}" alt="Poster">
+                            </a>
+                            <div class="card-body">
+                                <a href="{{ url_for('movie_detail', content_id=entry.item._id) }}" class="card-title">
+                                    {{ entry.item.title or entry.item.name }}
+                                </a>
+                                <div class="card-subtitle">
+                                    {% if entry.kind == 'TVShow' %}Serie de TV{% else %}Película{% endif %}
+                                    • {{ (entry.item.releaseDate or entry.item.firstAirDate)[:4] }}
                                 </div>
+                            </div>
+                            <div class="card-actions">
                                 <form action="{{ url_for('remove_from_watchlist', item_id=entry.item._id) }}" method="POST">
-                                    <button type="submit" class="btn-remove">Quitar</button>
+                                    <button type="submit" class="btn-icon" title="Quitar">🗑</button>
                                 </form>
                             </div>
+                        </div>
                         {% endif %}
                     {% endfor %}
                 {% else %}
-                    <div class="empty-state">
-                        <span class="empty-icon">+</span>
-                        Tu lista de seguimiento está vacía.
+                    <div class="empty-box">No tienes nada en tu lista aún.</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div>
+            <div class="section-header">
+                <div class="section-title">⭐ Mis Reseñas</div>
+            </div>
+
+            <div class="media-list">
+                {% if my_reviews %}
+                    {% for review in my_reviews %}
+                    <div class="horizontal-card" style="height: auto;"> <div class="card-poster" style="display:flex; align-items:center; justify-content:center; background:#222; color:#555; font-size:2rem;">
+                            💬
+                        </div>
+                        <div class="card-body">
+                            <a href="{{ url_for('movie_detail', content_id=review.movieId) }}" class="card-title">
+                                {{ review.movieTitle }}
+                            </a>
+                            <div class="user-rating">
+                                {{ '★' * review.rating }} <span style="color:#666; font-weight:normal;">({{ review.rating }}/5)</span>
+                            </div>
+                            <p style="color:#ccc; font-size:0.95rem; margin-top:10px; line-height:1.5;">
+                                "{{ review.text }}"
+                            </p>
+                            <div style="font-size:0.8rem; color:#666; margin-top:10px;">
+                                Publicado el {{ review.date.split('T')[0] }}
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <form action="{{ url_for('delete_review', review_id=review._id) }}" method="POST">
+                                <button type="submit" class="btn-icon" title="Eliminar" onclick="return confirm('¿Borrar esta reseña?')">🗑</button>
+                            </form>
+                        </div>
                     </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-box">No has escrito ninguna reseña.</div>
                 {% endif %}
             </div>
         </div>

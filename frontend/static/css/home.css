@@ -2,39 +2,40 @@
 .hero-container {
     position: relative;
     width: 100%;
-    height: 600px; /* Aumenté un poco la altura total para dar más aire */
-    margin-bottom: 50px;
+    height: 600px; /* Altura fija aumentada */
+    margin-bottom: 50px; /* Espacio seguro antes de las filas de películas */
     border-bottom: 1px solid var(--border);
     background-color: #000;
+    overflow: hidden; /* CRUCIAL: Corta cualquier contenido que intente salirse */
 }
 
 .hero-slide {
     position: absolute;
     inset: 0;
     background-size: cover;
-    background-position: center top;
+    background-position: center center; /* Centrar imagen */
     opacity: 0;
     transition: opacity 0.8s ease;
 }
 .hero-slide.active { opacity: 1; z-index: 1; }
 
 .hero-overlay {
-    width: 100%; height: 100%;
-    /* Ajusté el gradiente para que la sombra suba más y cubra el texto en su nueva posición */
-    background: linear-gradient(to top, var(--bg-main) 0%, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0) 100%);
+    width: 100%;
+    height: 100%;
+    /* Degradado más fuerte en el lado izquierdo para el texto */
+    background: linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.1) 100%);
     display: flex;
-    align-items: flex-end;
 
-    /* --- CAMBIO CLAVE: EMPUJA EL CONTENIDO HACIA ARRIBA --- */
-    padding-bottom: 180px;
-    padding-left: 60px;
+    /* --- CORRECCIÓN: CENTRADO VERTICAL --- */
+    align-items: center; /* Esto pone el texto en el medio, ni muy arriba ni muy abajo */
+    padding-left: 80px;  /* Margen izquierdo generoso */
 }
 
 .hero-content {
-    max-width: 700px;
+    max-width: 650px;
     z-index: 2;
     position: relative;
-    transform: translateY(20px);
+    transform: translateY(30px);
     transition: transform 0.8s ease-out;
 }
 .hero-slide.active .hero-content { transform: translateY(0); }
@@ -44,49 +45,53 @@
     font-size: 0.9rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     margin-bottom: 15px;
     display: block;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
 }
 
 .hero-title {
-    font-size: 4rem; /* Título un poco más grande */
-    margin: 0 0 15px 0;
-    line-height: 1.1;
+    font-size: 4.5rem; /* Título más grande e impactante */
+    margin: 0 0 20px 0;
+    line-height: 1;
     color: white;
-    text-shadow: 0 4px 10px rgba(0,0,0,0.9);
+    text-shadow: 0 4px 15px rgba(0,0,0,0.9);
+    font-weight: 800;
 }
 
 .hero-meta {
     display: flex;
     gap: 20px;
-    color: #ddd;
+    color: #e5e5e5;
     font-size: 1.2rem;
     margin-bottom: 25px;
     align-items: center;
-    font-weight: 500;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    font-weight: 600;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.8);
 }
 .rating-stars { color: #ffd700; letter-spacing: 2px; }
 
 .hero-desc {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     color: #ccc;
     margin-bottom: 35px;
     line-height: 1.6;
-    max-width: 85%;
+    max-width: 90%;
+
+    /* Limitar a 3 líneas para que no sea muy largo */
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+
+    text-shadow: 0 2px 4px rgba(0,0,0,0.9);
 }
 
 .hero-btn {
     background: var(--accent);
     color: #fff;
-    padding: 15px 40px; /* Botón más grande */
+    padding: 15px 45px;
     border-radius: 50px;
     font-weight: 800;
     font-size: 1rem;
@@ -95,20 +100,20 @@
     display: inline-block;
     border: none;
     transition: all 0.3s ease;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
     text-shadow: none;
 }
 .hero-btn:hover {
     background: #c02606;
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6);
     color: white;
 }
 
-/* Puntos de navegación (los subimos también) */
+/* Puntos de navegación */
 .slider-dots {
     position: absolute;
-    bottom: 40px; /* Más arriba del borde */
+    bottom: 30px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -118,17 +123,18 @@
 .dot {
     width: 12px; height: 12px; background: rgba(255,255,255,0.3);
     border-radius: 50%; cursor: pointer; transition: all 0.3s;
+    border: 1px solid rgba(255,255,255,0.1);
 }
-.dot.active { background: var(--accent); transform: scale(1.3); }
+.dot.active { background: var(--accent); transform: scale(1.3); border-color: transparent; }
 
-/* --- FILAS DE PELÍCULAS (Sin cambios) --- */
-.category-section { margin-bottom: 50px; }
+/* --- FILAS DE PELÍCULAS (GRID) --- */
+.category-section { margin-bottom: 60px; }
 
 .row-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
     border-bottom: 1px solid var(--border);
     padding-bottom: 10px;
     padding-left: 40px;
@@ -136,35 +142,36 @@
 }
 
 .row-title {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     text-transform: uppercase;
     letter-spacing: 1px;
     font-weight: 700;
     color: var(--text-main);
     margin: 0;
-    border-left: 4px solid var(--accent);
-    padding-left: 10px;
+    border-left: 5px solid var(--accent);
+    padding-left: 15px;
 }
 
 .view-all {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: var(--accent);
-    font-weight: 600;
+    font-weight: 700;
     transition: color 0.2s;
     text-transform: uppercase;
+    cursor: pointer;
 }
-.view-all:hover { color: white; }
+.view-all:hover { color: white; text-decoration: underline; }
 
 .media-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 20px;
+    gap: 25px;
     padding: 0 40px;
 }
 
 .media-card {
     background-color: var(--bg-card);
-    border-radius: 8px;
+    border-radius: 10px;
     overflow: hidden;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     border: 1px solid var(--border);
@@ -175,8 +182,8 @@
 }
 
 .media-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    transform: translateY(-10px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.5);
     border-color: var(--text-muted);
     z-index: 5;
 }
@@ -193,9 +200,9 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s;
+    transition: transform 0.4s;
 }
-.media-card:hover .poster-wrapper img { transform: scale(1.05); }
+.media-card:hover .poster-wrapper img { transform: scale(1.08); }
 
 .card-info {
     padding: 15px;
@@ -206,7 +213,7 @@
 }
 
 .card-info h3 {
-    font-size: 0.95rem;
+    font-size: 1rem;
     margin: 0 0 8px 0;
     white-space: nowrap;
     overflow: hidden;
@@ -217,23 +224,23 @@
 }
 
 .card-meta {
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 15px;
 }
 
 .score { color: #46d369; font-weight: bold; }
 
 .watchlist-btn-mini {
     width: 100%;
-    background-color: rgba(255,255,255,0.1);
+    background-color: rgba(255,255,255,0.08);
     color: var(--text-main);
     border: 1px solid transparent;
-    border-radius: 4px;
-    padding: 8px;
+    border-radius: 6px;
+    padding: 10px;
     font-size: 0.75rem;
     font-weight: bold;
     cursor: pointer;
@@ -253,9 +260,12 @@
 @media (max-width: 900px) {
     .media-grid { grid-template-columns: repeat(3, 1fr); padding: 0 20px; }
     .row-header { padding: 0 20px; }
-    .hero-title { font-size: 2.5rem; }
+    .hero-title { font-size: 3rem; }
 }
 @media (max-width: 600px) {
     .media-grid { grid-template-columns: repeat(2, 1fr); }
-    .hero-content { padding-left: 20px; }
+    .hero-content { padding-left: 30px; }
+    .hero-overlay { padding-left: 0; justify-content: center; text-align: center; }
+    .hero-title { font-size: 2.2rem; }
+    .hero-meta { justify-content: center; }
 }
