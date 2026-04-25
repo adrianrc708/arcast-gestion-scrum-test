@@ -2,125 +2,127 @@
 {% block title %}Inicio - ReelScore{% endblock %}
 
 {% block content %}
-    <style>
-        /* Contenedor principal con padding */
-        .main-content-area { padding: 20px; }
+    <div class="main-content-area" style="padding:0;">
 
-        /* Cabecera de Categoría: Título a la izquierda, Botón a la derecha */
-        .category-header {
-            display: flex;
-            justify-content: space-between; /* Separa los elementos a los extremos */
-            align-items: center; /* Centra verticalmente */
-            margin-top: 40px;
-            margin-bottom: 15px;
-            border-left: 5px solid #fa320a;
-            padding-left: 15px;
-        }
-
-        .category-header h2 {
-            font-size: 1.4em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin: 0; /* Quitar margen por defecto para alinear bien */
-        }
-
-        /* Enlace "Ver Todo" */
-        .view-all-link {
-            font-size: 0.85em;
-            color: #007bff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        .view-all-link:hover { text-decoration: underline; }
-
-        /* Grid Fijo de 5 Columnas */
-        .media-row {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 20px;
-            width: 100%;
-        }
-
-        /* Tarjeta */
-        .media-card {
-            background: white; border-radius: 8px; overflow: hidden;
-            transition: transform 0.2s ease; position: relative; border: 1px solid #eee;
-            display: flex; flex-direction: column; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .media-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.15); z-index: 10; }
-
-        .poster-frame { height: 280px; width: 100%; background-color: #ddd; display: block; }
-        .poster-frame img { width: 100%; height: 100%; object-fit: cover; }
-
-        .card-info { padding: 10px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .score-row { display: flex; align-items: center; gap: 5px; font-size: 0.85em; font-weight: bold; color: #333; margin-bottom: 5px; }
-
-        .media-title {
-            font-size: 0.9em; font-weight: bold; margin: 0 0 10px 0; line-height: 1.2;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
-            overflow: hidden; text-decoration: none; color: #000;
-        }
-        .media-title:hover { color: #fa320a; }
-
-        .watchlist-btn {
-            background-color: white; color: #333; border: 1px solid #ccc; border-radius: 20px;
-            padding: 6px 0; font-size: 0.75em; font-weight: bold; cursor: pointer;
-            width: 100%; transition: all 0.2s; margin-top: auto;
-        }
-        .watchlist-btn:hover { background-color: #fa320a; color: white; border-color: #fa320a; }
-    </style>
-
-    <div class="main-content-area">
-
-        {% macro render_row(title, items, genre_filter=None, category_type='movies') %}
-            {% if items %}
-            <div class="category-header">
-                <h2>{{ title }}</h2>
-                {% if genre_filter %}
-                    <a href="{{ url_for('view_all', category=category_type, genre=genre_filter) }}" class="view-all-link">VIEW ALL ></a>
-                {% elif category_type == 'tvshows' %}
-                     <a href="{{ url_for('view_all', category='tvshows') }}" class="view-all-link">VIEW ALL ></a>
-                {% endif %}
-            </div>
-
-            <div class="media-row">
-                {% for item in items %}
-                    <div class="media-card">
-                        <a href="{{ url_for('movie_detail', content_id=item._id) }}" class="poster-frame">
-                            <img src="{{ item.posterUrl or 'https://via.placeholder.com/160x240?text=No+Image' }}" alt="{{ item.title or item.name }}">
-                        </a>
-                        <div class="card-info">
-                            <div class="score-row">
-                                <span style="color: tomato;">🍅</span>
-                                {% if item.voteAverage %} {{ (item.voteAverage * 10)|round|int }}% {% else %} -- {% endif %}
-                            </div>
-                            <a href="{{ url_for('movie_detail', content_id=item._id) }}" class="media-title" title="{{ item.title or item.name }}">
-                                {{ item.title or item.name }}
-                            </a>
-
-                            <form action="{{ url_for('add_to_watchlist') }}" method="POST">
-                                <input type="hidden" name="movieId" value="{{ item._id }}">
-                                <input type="hidden" name="contentType" value="{{ 'tv' if item.name else 'movie' }}">
-                                <button type="submit" class="watchlist-btn"><span>+</span> WATCHLIST</button>
-                            </form>
+        {% if hero_movies %}
+        <div class="hero-container">
+            {% for movie in hero_movies %}
+            <div class="hero-slide {% if loop.first %}active{% endif %}"
+                 style="background-image: url('{{ movie.backdropUrl or movie.posterUrl }}');">
+                <div class="hero-overlay">
+                    <div class="hero-content">
+                        <span class="hero-label">🔥 TENDENCIA #{{ loop.index }}</span>
+                        <h1 class="hero-title">{{ movie.title or movie.name }}</h1>
+                        <div class="hero-meta">
+                            <span class="rating-stars">★★★★☆</span>
+                            <span>{{ (movie.voteAverage * 10)|int }}% Score</span>
+                            <span>{{ movie.releaseDate[:4] if movie.releaseDate else '' }}</span>
                         </div>
+                        <p class="hero-desc">{{ movie.overview }}</p>
+                        <a href="{{ url_for('movie_detail', content_id=movie._id) }}" class="hero-btn">VER DETALLES</a>
                     </div>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="slider-dots">
+                {% for movie in hero_movies %}
+                <div class="dot {% if loop.first %}active{% endif %}" onclick="manualSlide({{ loop.index0 }})"></div>
                 {% endfor %}
             </div>
-            {% endif %}
-        {% endmacro %}
-
-        {{ render_row("🔥 Aclamadas por la Crítica", top_rated) }}
-        {{ render_row("💥 Acción y Aventura", action_movies, "Acción") }}
-        {{ render_row("😂 Comedias", comedy_movies, "Comedia") }}
-        {{ render_row("👻 Terror y Suspenso", horror_movies, "Terror") }}
-        {{ render_row("🎭 Dramas Intensos", drama_movies, "Drama") }}
-        {{ render_row("🚀 Ciencia Ficción", scifi_movies, "Ciencia ficción") }}
-        {{ render_row("🎨 Animación", anim_movies, "Animación") }}
-
-        {% if tv_shows %}
-            {{ render_row("📺 Series de TV Populares", tv_shows, None, "tvshows") }}
+        </div>
         {% endif %}
 
+        <div class="content-wrapper" style="max-width: 1400px; margin: 0 auto;">
+
+            {% macro render_row(title, items, genre_filter=None, category_type='movies') %}
+                {% if items %}
+                <div class="category-section">
+                    <div class="row-header">
+                        <h2 class="row-title">{{ title }}</h2>
+
+                        {% if genre_filter %}
+                            <a href="{{ url_for('view_all', category=category_type, genre=genre_filter) }}" class="view-all">VER TODO</a>
+                        {% elif category_type == 'tvshows' %}
+                             <a href="{{ url_for('view_all', category='tvshows') }}" class="view-all">VER TODO</a>
+                        {% endif %}
+                    </div>
+
+                    <div class="media-grid">
+                        {% for item in items %}
+                        <div class="media-card">
+                            <div class="poster-wrapper">
+                                <a href="{{ url_for('movie_detail', content_id=item._id) }}">
+                                    <img src="{{ item.posterUrl or 'https://via.placeholder.com/200x300?text=No+Image' }}" alt="{{ item.title or item.name }}">
+                                </a>
+                            </div>
+                            <div class="card-info">
+                                <h3>{{ item.title or item.name }}</h3>
+                                <div class="card-meta">
+                                    <span>{{ (item.releaseDate or item.firstAirDate)[:4] if (item.releaseDate or item.firstAirDate) else '' }}</span>
+                                    <span class="score">🍅 {{ (item.voteAverage * 10)|int }}%</span>
+                                </div>
+
+                                <form action="{{ url_for('add_to_watchlist') }}" method="POST">
+                                    <input type="hidden" name="movieId" value="{{ item._id }}">
+                                    <input type="hidden" name="contentType" value="{{ 'tv' if item.name else 'movie' }}">
+                                    <button type="submit" class="watchlist-btn-mini">+ Mi Lista</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            {% endmacro %}
+
+            {{ render_row("🔥 Aclamadas por la Crítica", top_rated) }}
+            {{ render_row("💥 Acción y Aventura", action_movies, "Acción", "movies") }}
+            {{ render_row("😂 Comedias", comedy_movies, "Comedia", "movies") }}
+            {{ render_row("👻 Terror y Suspenso", horror_movies, "Terror", "movies") }}
+            {{ render_row("🎭 Dramas Intensos", drama_movies, "Drama", "movies") }}
+            {{ render_row("🚀 Ciencia Ficción", scifi_movies, "Ciencia ficción", "movies") }}
+            {{ render_row("🎨 Animación", anim_movies, "Animación", "movies") }}
+
+            {% if tv_shows %}
+                {{ render_row("📺 Series de TV Populares", tv_shows, None, "tvshows") }}
+            {% endif %}
+        </div>
     </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.hero-slide');
+        const dots = document.querySelectorAll('.dot');
+        const totalSlides = slides.length;
+        let slideInterval;
+
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+
+            if(slides[index]) slides[index].classList.add('active');
+            if(dots[index]) dots[index].classList.add('active');
+            currentSlide = index;
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalSlides;
+            showSlide(currentSlide);
+        }
+
+        function manualSlide(index) {
+            clearInterval(slideInterval);
+            showSlide(index);
+            startSlider();
+        }
+
+        function startSlider() {
+            slideInterval = setInterval(nextSlide, 5000);
+        }
+
+        if (totalSlides > 0) {
+            startSlider();
+        }
+    </script>
 {% endblock %}
