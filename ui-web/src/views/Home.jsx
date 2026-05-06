@@ -37,10 +37,6 @@ const CarouselRow = ({ title, items, type }) => {
 const Home = () => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    // 1. AQUI VA EL ESTADO DE LAS RECOMENDACIONES
-    const [recommendations, setRecommendations] = useState([]);
-
     const [searchParams, setSearchParams] = useSearchParams();
     const navigate = useNavigate();
 
@@ -51,6 +47,7 @@ const Home = () => {
 
     const [currentSlide, setCurrentSlide] = useState(0);
 
+    // Estados para Paginación
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 15;
 
@@ -61,6 +58,7 @@ const Home = () => {
             .finally(() => setLoading(false));
     }, [type, genre, sort]);
 
+    // Resetear a la página 1 cuando se cambia de pestaña o filtro
     useEffect(() => { setCurrentPage(1); }, [type, genre, sort]);
 
     const heroItems = items.slice(0, 5);
@@ -69,16 +67,6 @@ const Home = () => {
         const interval = setInterval(() => setCurrentSlide(prev => (prev + 1) % heroItems.length), 5000);
         return () => clearInterval(interval);
     }, [heroItems, view]);
-
-    // 2. AQUI VA EL EFECTO QUE LLAMA A LA API DE LA IA
-    useEffect(() => {
-        const token = localStorage.getItem('arcast_token');
-        if (token) {
-            api.get('/users/recommendations')
-                .then(res => setRecommendations(res.data))
-                .catch(err => console.error(err));
-        }
-    }, []);
 
     const updateFilter = (key, value) => {
         const params = new URLSearchParams(searchParams);
@@ -160,11 +148,12 @@ const Home = () => {
                             <div className="hero-content">
                                 <span className="hero-label">Destacado #{index + 1}</span>
                                 <h1 className="hero-title">{item.title || item.name}</h1>
+                                {/* Si la API no tiene resumen, pone un texto predeterminado */}
                                 <p className="hero-desc">{item.overview || "Descubre esta increíble historia. Haz clic en la imagen o en el botón para ver todos los detalles y calificaciones."}</p>
                                 <button
                                     className="hero-btn"
                                     onClick={(e) => {
-                                        e.stopPropagation();
+                                        e.stopPropagation(); // Evita doble clic si pinchas directo en el botón
                                         navigate(`/item/${type === 'movies' ? 'movie' : 'tvshow'}/${item._id}`);
                                     }}
                                 >
@@ -175,6 +164,7 @@ const Home = () => {
                     </div>
                 ))}
 
+                {/* Puntos para cambiar de slide manualmente */}
                 <div className="slider-dots">
                     {heroItems.map((_, index) => (
                         <div
@@ -188,11 +178,6 @@ const Home = () => {
                     ))}
                 </div>
             </div>
-
-            {/* 3. AQUI VA EL RENDERIZADO VISUAL DE LA IA (Debajo del Hero y antes de las otras filas) */}
-            {recommendations.length > 0 && (
-                <CarouselRow title="Recomendaciones para ti" items={recommendations} type={type} />
-            )}
 
             <CarouselRow title="Novedades Recientes" items={recent} type={type} />
             <CarouselRow title="Aclamadas por la Crítica" items={topRated} type={type} />
