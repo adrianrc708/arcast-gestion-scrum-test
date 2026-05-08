@@ -1,18 +1,24 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-// Definición del esquema (Esto es lo que te faltaba o estaba mal escrito)
 const TVShowSchema = new Schema({
     name: { type: String, required: true },
     overview: { type: String },
     posterUrl: { type: String },
+    backdropUrl: { type: String }, // NUEVO
     tmdbId: { type: String, unique: true, required: true },
     firstAirDate: { type: String },
-    // Campos adicionales para las mejoras recientes
     genres: [{ type: String }],
     trailerKey: { type: String },
-    voteAverage: { type: Number }
+    voteAverage: { type: Number },
+
+    // NUEVOS CAMPOS
+    seasons: { type: Number }, // Cantidad de temporadas
+    languages: [{ type: String }],
+
+    watchLink: { type: String },
+    platformName: { type: String },
+    platformLogo: { type: String }
 });
 
-// Exportar el modelo con el nombre correcto 'TVShow'
 module.exports = mongoose.model('TVShow', TVShowSchema);

@@ -2,233 +2,150 @@
 {% block title %}{{ movie.title or movie.name }}{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/detail.css') }}">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    /* Fondo Horizontal (Backdrop) */
+    .movie-backdrop {
+        position: relative; width: 100%; height: 400px;
+        /* Usamos la URL o un color por defecto si no hay imagen */
+        background-image: url('{{ movie.backdropUrl or movie.posterUrl }}');
+        background-size: cover; background-position: center;
+        border-radius: 10px; margin-bottom: 30px;
+        box-shadow: inset 0 0 200px rgba(0,0,0,0.9); /* Sombra para leer el texto */
+    }
+    .backdrop-content {
+        position: absolute; bottom: 30px; left: 30px; color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+    .backdrop-content h1 { font-size: 3.5em; margin: 0; }
 
+    .detail-grid { display: grid; grid-template-columns: 250px 1fr; gap: 30px; }
+    .poster-img { width: 100%; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
 
-<div class="movie-hero">
-    <img src="{{ movie.backdropUrl or movie.posterUrl }}" class="hero-backdrop" alt="Backdrop">
-    <div class="hero-gradient"></div>
+    .info-card { background: white; padding: 20px; border-radius: 8px; border: 1px solid #eee; margin-top: 20px; }
+    .info-row { margin-bottom: 8px; font-size: 0.9em; }
+    .info-row strong { color: #555; display: inline-block; width: 100px; }
 
-    <div class="hero-content">
-        <img src="{{ movie.posterUrl }}" class="hero-poster" alt="{{ movie.title }}">
+    /* Botón de Streaming/Cine */
+    .watch-btn {
+        display: flex; align-items: center; gap: 10px; justify-content: center;
+        background: #111; color: white; padding: 12px;
+        text-decoration: none; border-radius: 5px; margin-top: 15px;
+        font-weight: bold; transition: transform 0.2s;
+    }
+    .watch-btn:hover { transform: scale(1.02); background: #333; }
+    .watch-btn img { width: 24px; height: 24px; border-radius: 4px; }
 
-        <div class="hero-info">
-            <h1 class="movie-title">{{ movie.title or movie.name }}</h1>
+    /* Reproductor */
+    .player-container { margin-top: 40px; }
+    .player-frame { width: 100%; height: 500px; border: none; border-radius: 10px; background: #000; }
+</style>
 
-            <div class="movie-meta">
-                {% if movie.releaseDate or movie.firstAirDate %}
-                    <div class="meta-item">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>{{ (movie.releaseDate or movie.firstAirDate)[:4] }}</span>
-                    </div>
-                {% endif %}
+<a href="{{ url_for('index') }}" style="display:inline-block; margin-bottom: 10px;">&larr; Volver</a>
 
-                {% if movie.duration %}
-                    <span class="separator"></span>
-                    <div class="meta-item">
-                        <i class="fas fa-clock"></i>
-                        <span>{{ movie.duration }} min</span>
-                    </div>
-                {% endif %}
-
-                {% if movie.seasons %}
-                    <span class="separator"></span>
-                    <div class="meta-item">
-                        <i class="fas fa-tv"></i>
-                        <span>{{ movie.seasons }} Temporadas</span>
-                    </div>
-                {% endif %}
-
-                {% if movie.voteAverage %}
-                     <span class="separator"></span>
-                    <div class="rating-badge">
-                        <i class="fas fa-star"></i> {{ (movie.voteAverage * 10)|int }}% Match
-                    </div>
-                {% endif %}
-            </div>
-
-            <div style="display:flex; gap:10px; margin-bottom: 20px; flex-wrap: wrap;">
-                {% for genre in movie.genres[:3] %}
-                    <span style="color: var(--accent); font-weight: 600; border: 1px solid var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.9rem;">{{ genre }}</span>
-                {% endfor %}
-            </div>
-
-            <p class="movie-overview">{{ movie.overview or 'No hay descripción disponible para este título.' }}</p>
-
-            <div class="action-row">
-                <form action="{{ url_for('add_to_watchlist') }}" method="POST">
-                    <input type="hidden" name="movieId" value="{{ movie._id }}">
-                    <input type="hidden" name="contentType" value="{% if movie.seasons %}tv{% else %}movie{% endif %}">
-                    <button type="submit" class="btn-watchlist">
-                        <i class="fas fa-plus"></i> AGREGAR A MI LISTA
-                    </button>
-                </form>
-
-                <div style="width: 1px; height: 40px; background: rgba(255,255,255,0.2); margin: 0 10px;"></div>
-
-                <div class="platforms-list">
-                    {% if movie.platforms %}
-                        {% for plat in movie.platforms %}
-                            <a href="{{ plat.link }}" target="_blank" title="Ver en {{ plat.name }}" class="platform-link">
-                                <img src="{{ plat.logo }}" class="platform-icon" alt="{{ plat.name }}">
-                            </a>
-                        {% endfor %}
-                    {% else %}
-                        <span style="color: #999; font-size: 0.9rem;">No disponible en streaming</span>
-                    {% endif %}
-                </div>
-            </div>
+<div class="movie-backdrop">
+    <div class="backdrop-content">
+        <h1>{{ movie.title or movie.name }}</h1>
+        <div>
+            {% if movie.voteAverage %} ⭐ {{ (movie.voteAverage * 10)|int }}% {% endif %}
         </div>
     </div>
 </div>
 
-<div class="content-container">
+<div class="detail-grid">
+    <div>
+        <img src="{{ movie.posterUrl }}" class="poster-img" alt="Poster">
 
-    {% if movie.trailerKey %}
-    <div class="section-dark" id="trailer">
-        <h2 class="section-title">Trailer Oficial</h2>
-        <div class="player-wrapper">
-            <iframe src="https://www.youtube.com/embed/{{ movie.trailerKey }}?rel=0&modestbranding=1" allowfullscreen></iframe>
-        </div>
-    </div>
-    {% endif %}
-
-    <div class="section-dark" id="watch-now">
-        <h2 class="section-title">Ver Ahora</h2>
-        <div class="player-wrapper">
+        <div class="info-card">
+            <div class="info-row"><strong>Estreno:</strong> {{ movie.releaseDate or movie.firstAirDate }}</div>
+            {% if movie.duration %}
+                <div class="info-row"><strong>Duración:</strong> {{ movie.duration }} min</div>
+            {% endif %}
             {% if movie.seasons %}
-                <iframe src="https://vidsrc.xyz/embed/tv/{{ movie.tmdbId }}/1/1" allowfullscreen></iframe>
+                <div class="info-row"><strong>Temporadas:</strong> {{ movie.seasons }}</div>
+            {% endif %}
+            {% if movie.languages %}
+                <div class="info-row"><strong>Idiomas:</strong> {{ movie.languages|join(', ') }}</div>
+            {% endif %}
+
+            <hr>
+
+            {% if movie.watchLink %}
+                <p style="margin-bottom:5px; font-size:0.85em; color:#666;">Disponible en:</p>
+                <a href="{{ movie.watchLink }}" target="_blank" class="watch-btn">
+                    {% if movie.platformLogo %}
+                        <img src="{{ movie.platformLogo }}" alt="Logo">
+                    {% endif %}
+                    Ver en {{ movie.platformName }}
+                </a>
             {% else %}
-                <iframe src="https://vidsrc.xyz/embed/movie/{{ movie.tmdbId }}" allowfullscreen></iframe>
+                <p style="font-size:0.9em; color:#888; text-align:center; margin-top:10px;">
+                    No disponible en streaming o cines actualmente.
+                </p>
             {% endif %}
         </div>
-        <p style="margin-top: 15px; font-size: 0.9rem; color: #888;"><i class="fas fa-info-circle"></i> Si el reproductor no funciona, intenta recargar la página o usar un navegador diferente.</p>
     </div>
 
-    <div class="section-dark" id="reviews">
-        <h2 class="section-title">Opiniones de la Comunidad</h2>
+    <div>
+        <h2>Sinopsis</h2>
+        <p style="line-height: 1.6; color: #444;">{{ movie.overview or 'No hay descripción disponible.' }}</p>
 
-        <div class="review-form-card">
-            <form action="{{ url_for('add_review', movie_id=movie_id) }}" method="POST">
-                <input type="hidden" name="movieTitle" value="{{ movie.title or movie.name }}">
-                <input type="hidden" name="contentType" value="{% if movie.seasons %}tv{% else %}movie{% endif %}">
-
-                <div class="form-header">
-                    <div class="user-label">
-                        <i class="fas fa-user-circle"></i>
-                        {% if session.get('username') %}
-                            <span>{{ session.get('username') }}</span>
-                        {% else %}
-                            <input type="text" name="username" placeholder="Tu alias (Opcional)" class="review-input-name">
-                        {% endif %}
-                    </div>
-
-                    <div class="custom-select-wrapper" id="ratingSelectWrapper">
-                        <input type="hidden" name="rating" id="ratingValue" required>
-
-                        <div class="select-trigger" id="selectTrigger">
-                            <span>Selecciona una calificación</span>
-                            </div>
-
-                        <div class="custom-options">
-                            <div class="custom-option" data-value="5">
-                                <span style="color: #FFD700;">★★★★★</span> Excelente
-                            </div>
-                            <div class="custom-option" data-value="4">
-                                <span style="color: #FFD700;">★★★★</span> Muy buena
-                            </div>
-                            <div class="custom-option" data-value="3">
-                                <span style="color: #FFD700;">★★★</span> Regular
-                            </div>
-                            <div class="custom-option" data-value="2">
-                                <span style="color: #FFD700;">★★</span> Mala
-                            </div>
-                            <div class="custom-option" data-value="1">
-                                <span style="color: #FFD700;">★</span> Terrible
-                            </div>
-                        </div>
-                    </div>
-
-                    <script>
-                        const wrapper = document.getElementById('ratingSelectWrapper');
-                        const trigger = document.getElementById('selectTrigger');
-                        const options = document.querySelectorAll('.custom-option');
-                        const hiddenInput = document.getElementById('ratingValue');
-                        const triggerText = trigger.querySelector('span');
-
-                        // Abrir/Cerrar menú
-                        trigger.addEventListener('click', () => {
-                            wrapper.classList.toggle('open');
-                        });
-
-                        // Seleccionar opción
-                        options.forEach(option => {
-                            option.addEventListener('click', () => {
-                                // Actualizar texto del botón
-                                triggerText.innerHTML = option.innerHTML;
-                                trigger.classList.add('selected');
-
-                                // Guardar valor real (5, 4, 3...)
-                                hiddenInput.value = option.getAttribute('data-value');
-
-                                // Cerrar menú
-                                wrapper.classList.remove('open');
-
-                                // Marcar visualmente la opción activa
-                                options.forEach(opt => opt.classList.remove('active'));
-                                option.classList.add('active');
-                            });
-                        });
-
-                        // Cerrar si se hace clic fuera
-                        document.addEventListener('click', (e) => {
-                            if (!wrapper.contains(e.target)) wrapper.classList.remove('open');
-                        });
-                    </script>
-                </div>
-
-                <textarea name="text" rows="4" class="review-textarea" placeholder="Cuéntanos, ¿qué te pareció esta película? (Mínimo 10 caracteres)" required minlength="10"></textarea>
-
-                <div style="text-align: right;">
-                    <button type="submit" class="btn btn-primary" style="padding: 12px 25px; font-weight: 600;">
-                        <i class="fas fa-paper-plane" style="margin-right: 8px;"></i> Publicar Reseña
-                    </button>
-                </div>
-            </form>
+        <div style="margin: 20px 0;">
+            {% for genre in movie.genres %}
+                <span style="background:#eee; padding:5px 12px; border-radius:15px; font-size:0.85em; margin-right:5px;">{{ genre }}</span>
+            {% endfor %}
         </div>
 
-        <div class="reviews-grid">
+        <div class="player-container">
+            <h2 style="border-left: 5px solid #fa320a; padding-left: 10px;">Ver Ahora</h2>
+            {% if movie.seasons %}
+                <iframe class="player-frame" src="https://vidsrc.xyz/embed/tv/{{ movie.tmdbId }}/1/1" allowfullscreen></iframe>
+            {% else %}
+                <iframe class="player-frame" src="https://vidsrc.xyz/embed/movie/{{ movie.tmdbId }}" allowfullscreen></iframe>
+            {% endif %}
+        </div>
+
+        {% if movie.trailerKey %}
+            <div style="margin-top: 40px;">
+                <h3>Trailer</h3>
+                <div style="position:relative; padding-bottom:56.25%; height:0;">
+                    <iframe src="https://www.youtube.com/embed/{{ movie.trailerKey }}"
+                        style="position:absolute; top:0; left:0; width:100%; height:100%; border-radius:10px;"
+                        frameborder="0" allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        {% endif %}
+
+        <div class="review-section">
+            <h3>Reseñas</h3>
+            <form action="{{ url_for('add_review', movie_id=movie_id) }}" method="POST" style="margin-bottom: 30px; background: #f9f9f9; padding: 20px; border-radius: 8px;">
+                <input type="hidden" name="movieTitle" value="{{ movie.title or movie.name }}">
+                {% if not session.get('username') %}
+                    <input type="text" name="username" placeholder="Tu nombre" required style="display:block; width:100%; margin-bottom:10px; padding:8px;">
+                {% endif %}
+                <select name="rating" style="margin-bottom:10px; padding:5px;">
+                    <option value="5">⭐⭐⭐⭐⭐ Excelente</option>
+                    <option value="4">⭐⭐⭐⭐ Muy buena</option>
+                    <option value="3">⭐⭐⭐ Regular</option>
+                    <option value="2">⭐⭐ Mala</option>
+                    <option value="1">⭐ Terrible</option>
+                </select>
+                <textarea name="text" rows="3" placeholder="Escribe tu opinión..." required style="width:100%; padding:8px; box-sizing: border-box;"></textarea>
+                <button type="submit" style="margin-top:10px; background:#fa320a; color:white; border:none; padding:8px 15px; cursor:pointer;">Publicar</button>
+            </form>
+
             {% if reviews %}
                 {% for review in reviews %}
-                <div class="review-card">
-                    <div class="review-header">
-                        <div class="review-stars">
-                            {% for i in range(review.rating) %}★{% endfor %}<span style="color: rgba(255,255,255,0.2);">{% for i in range(5 - review.rating) %}★{% endfor %}</span>
-                        </div>
-
-                        <div class="review-meta">
-                            <span class="review-user">{{ review.username }}</span>
-                            <span class="review-date">
-                                <i class="far fa-calendar-alt" style="margin-right: 5px;"></i>
-                                {{ review.date.split('T')[0] }}
-                            </span>
-                        </div>
+                    <div style="border-bottom:1px solid #eee; padding: 15px 0;">
+                        <strong>{{ review.username }}</strong> <span style="color:gold;">{{ '★' * review.rating }}</span>
+                        <p style="margin: 5px 0;">{{ review.text }}</p>
+                        <small style="color:#999;">{{ review.date.split('T')[0] }}</small>
                     </div>
-                    <div class="review-body">
-                        {{ review.text }}
-                    </div>
-                </div>
                 {% endfor %}
             {% else %}
-                <div class="no-reviews">
-                    <i class="far fa-comment-dots" style="font-size: 3rem; margin-bottom: 15px; display: block; color: var(--accent);"></i>
-                    <p>Aún no hay reseñas para este título.</p>
-                    <p>¡Sé el primero en compartir tu opinión!</p>
-                </div>
+                <p>Sé el primero en opinar.</p>
             {% endif %}
         </div>
     </div>
-
 </div>
 {% endblock %}
