@@ -21,22 +21,20 @@ exports.getReviewsByMovie = async (req, res) => {
 };
 
 // POST /api/reviews -> crear reseña (¡MODIFICADO!)
+// POST /api/reviews -> crear reseña
 exports.createReview = async (req, res) => {
 
-    // Datos del formulario
-    const { movieId, movieTitle, text, rating } = req.body;
+    // Datos del formulario (Agregamos contentType)
+    const { movieId, movieTitle, text, rating, contentType } = req.body;
 
     let username;
     let userId = null;
 
-    // req.user es adjuntado por el middleware 'optionalAuth' si el token es válido
     if (req.user) {
-        // Usuario está logueado
-        username = req.user.username; // Usamos el username del token (seguro)
-        userId = req.user.id;         // Guardamos la referencia al usuario
+        username = req.user.username;
+        userId = req.user.id;
     } else {
-        // Usuario es anónimo
-        username = req.body.username || 'Anónimo'; // Tomamos el username del form
+        username = req.body.username || 'Anónimo';
     }
 
     const review = new Review({
@@ -44,8 +42,9 @@ exports.createReview = async (req, res) => {
         movieTitle,
         text,
         rating,
-        username, // Asignamos el username (de token o de form)
-        userId    // Asignamos el userId (o null si es anónimo)
+        username,
+        userId,
+        contentType: contentType || 'movie' // Guardamos el tipo
     });
 
     try {
@@ -55,6 +54,8 @@ exports.createReview = async (req, res) => {
         res.status(400).json({ message: err.message });
     }
 };
+
+// ... (resto del archivo igual: getAllReviews, updateReview, etc.) ...
 
 // PUT /api/reviews/:id -> editar reseña (Modificado para seguridad)
 exports.updateReview = async (req, res) => {

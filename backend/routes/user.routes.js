@@ -8,9 +8,11 @@ router.get('/me', requiredAuth, controller.getMe);
 router.put('/me', requiredAuth, controller.updateMe);
 router.get('/my-reviews', requiredAuth, controller.getMyReviews);
 
-// --- NUEVAS RUTAS ---
+// ... (código existente) ...
 router.post('/me/watchlist', requiredAuth, controller.addToWatchlist);
 router.get('/me/watchlist', requiredAuth, controller.getWatchlist);
 
+// NUEVA RUTA
+router.delete('/me/watchlist/:itemId', requiredAuth, controller.removeFromWatchlist);
 
 module.exports = router;

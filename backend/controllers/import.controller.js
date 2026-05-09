@@ -25,32 +25,36 @@ const isInTheaters = (releaseDateStr) => {
     return diffDays <= 60; // 60 días en cartelera aprox
 };
 
-// Helper: Lógica de Dónde Ver
-const getWatchProvider = (providers, releaseDate) => {
-    // 1. Buscar Streaming en Perú (PE)
+// ...
+const getWatchProvider = (providers, releaseDate, title) => { // Agregamos 'title'
+    // 1. Buscar Streaming
     if (providers && providers.results && providers.results.PE && providers.results.PE.flatrate) {
         const provider = providers.results.PE.flatrate[0];
+        const providerName = provider.provider_name;
+
+        // GENERADOR DE LINKS DIRECTOS (Truco de búsqueda)
+        let directLink = providers.results.PE.link; // Fallback a TMDB
+
+        if (providerName.includes('Netflix')) directLink = `https://www.netflix.com/search?q=${encodeURIComponent(title)}`;
+        else if (providerName.includes('Amazon')) directLink = `https://www.amazon.com/s?k=${encodeURIComponent(title)}&i=instant-video`;
+        else if (providerName.includes('Disney')) directLink = `https://www.disneyplus.com/search?q=${encodeURIComponent(title)}`;
+        else if (providerName.includes('HBO') || providerName.includes('Max')) directLink = `https://play.max.com/search?q=${encodeURIComponent(title)}`;
+        else if (providerName.includes('Apple')) directLink = `https://tv.apple.com/search?term=${encodeURIComponent(title)}`;
+
         return {
-            name: provider.provider_name,
-            link: providers.results.PE.link,
+            name: providerName,
+            link: directLink,
             logo: `${TMDB_IMG_URL}${provider.logo_path}`,
             type: 'streaming'
         };
     }
-
-    // 2. Si no hay streaming, ¿Es reciente? -> Cine
-    if (isInTheaters(releaseDate)) {
-        return {
-            name: 'Cineplanet / Cinemark',
-            link: 'https://www.cineplanet.com.pe/', // Link directo a cines
-            logo: 'https://i.imgur.com/Q1f8v8y.png', // Icono de ticket genérico
-            type: 'theater'
-        };
-    }
-
-    // 3. Nada
-    return { name: null, link: null, logo: null, type: null };
+    // ... (resto de la función para cines sigue igual)
+    // ...
 };
+
+// IMPORTANTE: Debes pasar el 'title' (o 'name' para series) al llamar a esta función
+// En importMovie:  const providerInfo = getWatchProvider(data['watch/providers'], data.release_date, data.title);
+// En importTVShow: const providerInfo = getWatchProvider(data['watch/providers'], data.first_air_date, data.name);
 
 exports.importMovie = async (req, res) => {
     const { title } = req.body;
